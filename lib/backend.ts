@@ -1,35 +1,53 @@
 /**
  * 后端服务检测工具
- * 在 Vercel 等无 Python 后端的环境中，自动降级为静态数据模式
+ * - 本地模式：Python 后端运行时返回 http://127.0.0.1:{port}
+ * - Vercel 模式：Python 后端不可用时返回 ""（同源 Next.js API 路由）
  */
 
-let cachedPort: number | null | undefined = undefined;
+let cachedMode: 'python' | 'nextjs' | undefined = undefined;
 
 /**
  * 获取后端 API 基础 URL
- * @returns 后端 URL（如 "http://127.0.0.1:12345"）或 null（后端不可用）
+ * @returns 后端 URL（如 "http://127.0.0.1:12345"）、""（同源 API 路由）或 null
  */
-export async function getApiBaseUrl(): Promise<string | null> {
-  if (cachedPort !== undefined) return cachedPort ? `http://127.0.0.1:${cachedPort}` : null;
+export async function getApiBaseUrl(): Promise<string> {
+  if (cachedMode === 'python') return cachedPythonUrl!;
+  if (cachedMode === 'nextjs') return '';
 
+  // 尝试检测 Python 后端
   try {
     const res = await fetch(`/backend_config.json?t=${Date.now()}`);
-    if (!res.ok) throw new Error('backend_config.json not found');
-    const data = await res.json();
-    if (data.api_port) {
-      cachedPort = data.api_port;
-      return `http://127.0.0.1:${data.api_port}`;
+    if (res.ok) {
+      const data = await res.json();
+      if (data.api_port) {
+        cachedMode = 'python';
+        cachedPythonUrl = `http://127.0.0.1:${data.api_port}`;
+        return cachedPythonUrl!;
+      }
     }
-    throw new Error('api_port missing');
   } catch {
-    cachedPort = null;
-    return null;
+    // ignore
   }
+
+  // 回退到 Next.js API 路由（同源）
+  cachedMode = 'nextjs';
+  return '';
+}
+
+let cachedPythonUrl: string | null = null;
+
+/**
+ * 检查是否为本地 Python 后端模式
+ */
+export async function isBackendAvailable(): Promise<boolean> {
+  const url = await getApiBaseUrl();
+  return url !== '';
 }
 
 /**
- * 检查后端是否可用
+ * 检查是否为 Vercel 在线模式（使用 Next.js API 路由）
  */
-export async function isBackendAvailable(): Promise<boolean> {
-  return (await getApiBaseUrl()) !== null;
+export async function isOnlineMode(): Promise<boolean> {
+  const url = await getApiBaseUrl();
+  return url === '';
 }
