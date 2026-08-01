@@ -7,6 +7,7 @@ import Navbar from '../../components/Navbar';
 import PageTransition from '../../components/PageTransition';
 import { ToastProvider, useToast } from '../../components/ToastProvider';
 import { AlertTriangle, Search, Trash2, X, Sparkles, Pencil } from 'lucide-react';
+import { getApiBaseUrl } from '../../lib/backend';
 
 function DraftsContent() {
   const { showToast } = useToast();
@@ -26,10 +27,13 @@ function DraftsContent() {
   const fetchDrafts = async () => {
     setIsLoading(true);
     try {
-      const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-      const configData = await configRes.json();
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        setDrafts([]);
+        return;
+      }
 
-      const res = await fetch(`http://127.0.0.1:${configData.api_port}/api/drafts/list`, {
+      const res = await fetch(`${baseUrl}/api/drafts/list`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ blog_path: blogPath })
@@ -58,10 +62,13 @@ function DraftsContent() {
     const id = deleteModal.id;
 
     try {
-      const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-      const configData = await configRes.json();
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        showToast("在线模式不支持此操作", "warning");
+        return;
+      }
 
-      const res = await fetch(`http://127.0.0.1:${configData.api_port}/api/drafts/delete`, {
+      const res = await fetch(`${baseUrl}/api/drafts/delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ blog_path: blogPath, id: id })

@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import RichTextEditor, { RichTextEditorHandle } from '../../components/editor/RichTextEditor';
 import MetaMatrix from '../../components/editor/MetaMatrix';
 import FloatingImageTool from '../../components/editor/FloatingImageTool';
+import { getApiBaseUrl } from '../../lib/backend';
 
 export default function EditorClient({ historyPostTags, historyChatterTags, historyMoods }: any) {
   const searchParams = useSearchParams();
@@ -39,9 +40,11 @@ export default function EditorClient({ historyPostTags, historyChatterTags, hist
     if (currentDocId !== 'new') {
       const loadDraft = async () => {
         try {
-          const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-          const config = await configRes.json();
-          const res = await fetch(`http://127.0.0.1:${config.api_port}/api/drafts/get`, {
+          const baseUrl = await getApiBaseUrl();
+          if (!baseUrl) {
+            return;
+          }
+          const res = await fetch(`${baseUrl}/api/drafts/get`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ blog_path: "F:/Projects/my-blog", id: currentDocId })
@@ -84,10 +87,13 @@ export default function EditorClient({ historyPostTags, historyChatterTags, hist
     };
 
     try {
-      const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-      const config = await configRes.json();
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        console.warn("在线模式不支持此操作");
+        return;
+      }
 
-      const res = await fetch(`http://127.0.0.1:${config.api_port}/api/drafts/save`, {
+      const res = await fetch(`${baseUrl}/api/drafts/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

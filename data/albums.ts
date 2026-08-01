@@ -4,6 +4,13 @@ export interface Album { id: string; title: string; description: string; cover: 
 
 export const albums: Album[] = [
   {
+    "title": "一起同行的回忆",
+    "description": "思来想去",
+    "id": "album_1785506342347",
+    "photos": [],
+    "date": "2026-07-31"
+  },
+  {
     "id": "terra-journey",
     "title": "泰拉大陆纪行",
     "description": "关于源石、孤星与前文明的视觉记录（测试用相册）",

@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import RichTextEditor, { RichTextEditorHandle } from '../../components/editor/RichTextEditor';
 import MetaMatrix from '../../components/editor/MetaMatrix';
 import FloatingImageTool from '../../components/editor/FloatingImageTool';
+import { getApiBaseUrl } from '../../lib/backend';
 
 export default function EditorClient({ historyPostTags, historyChatterTags, historyMoods }: any) {
   const searchParams = useSearchParams();
@@ -34,9 +35,11 @@ export default function EditorClient({ historyPostTags, historyChatterTags, hist
     if (docId !== 'new') {
       const loadDraft = async () => {
         try {
-          const configRes = await fetch('/backend_config.json');
-          const config = await configRes.json();
-          const res = await fetch(`http://127.0.0.1:${config.api_port}/api/drafts/get`, {
+          const baseUrl = await getApiBaseUrl();
+          if (!baseUrl) {
+            return;
+          }
+          const res = await fetch(`${baseUrl}/api/drafts/get`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ blog_path: "F:/Projects/my-blog", id: docId })

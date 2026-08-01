@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../ToastProvider';
+import { getApiBaseUrl } from '../../lib/backend';
 
 export default function GallerySection({ formData, handleUpdate, pushToQueue }: any) {
   const { showToast } = useToast();
@@ -22,10 +23,13 @@ export default function GallerySection({ formData, handleUpdate, pushToQueue }: 
     showToast("正在向图床服务器发送校验探针...", "info");
 
     try {
-      const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-      const configData = await configRes.json();
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        showToast("在线模式不支持此操作", "warning");
+        return;
+      }
 
-      const res = await fetch(`http://127.0.0.1:${configData.api_port}/api/picbed/test`, {
+      const res = await fetch(`${baseUrl}/api/picbed/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, token })

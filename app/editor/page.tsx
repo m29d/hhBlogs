@@ -11,6 +11,7 @@ import { ArrowLeft, AlertTriangle, Save, LogOut } from 'lucide-react';
 import { useToast } from '../../components/ToastProvider';
 import { useOperations } from '../../context/OperationContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getApiBaseUrl } from '../../lib/backend';
 
 // 🌟 核心修改 1：把原本暴露的主函数改名为 EditorContent（不带 export default）
 function EditorContent() {
@@ -50,10 +51,14 @@ function EditorContent() {
   useEffect(() => {
     const fetchTags = async () => {
       setIsLoadingTags(true);
-      try {
-        const configRes = await fetch(`/backend_config.json`);
-        const config = await configRes.json();
-        const res = await fetch(`http://127.0.0.1:${config.api_port}/api/drafts/all_tags`);
+    try {
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        setHistoryPostTags([]);
+        setHistoryChatterTags([]);
+        return;
+      }
+      const res = await fetch(`${baseUrl}/api/drafts/all_tags`);
         const data = await res.json();
         if (data.success) {
           setHistoryPostTags(data.postTags || []);
@@ -69,10 +74,13 @@ function EditorContent() {
     if (currentDocId !== 'new') {
       const loadDraft = async () => {
         try {
-          const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-          const config = await configRes.json();
+          const baseUrl = await getApiBaseUrl();
+          if (!baseUrl) {
+            showToast("在线模式不支持此操作", "warning");
+            return;
+          }
 
-          const res = await fetch(`http://127.0.0.1:${config.api_port}/api/drafts/get`, {
+          const res = await fetch(`${baseUrl}/api/drafts/get`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: currentDocId, type: docType })
@@ -152,9 +160,12 @@ function EditorContent() {
 
     setIsSaving(true);
     try {
-      const configRes = await fetch(`/backend_config.json`);
-      const config = await configRes.json();
-      const res = await fetch(`http://127.0.0.1:${config.api_port}/api/drafts/save`, {
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        showToast("在线模式不支持此操作", "warning");
+        return;
+      }
+      const res = await fetch(`${baseUrl}/api/drafts/save`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
       const data = await res.json();

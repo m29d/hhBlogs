@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, AlertTriangle, Sparkles, LayoutGrid, ListTree, Calendar, Hash, ArrowRight, Edit3, ArrowUp } from 'lucide-react';
 import { useToast } from './ToastProvider';
 import Link from 'next/link';
+import { getApiBaseUrl } from '../lib/backend';
 
 export default function TimelineClient({ posts: initialPosts, tags }: { posts: any[], tags: { name: string, count: number }[] }) {
   const [posts, setPosts] = useState(initialPosts);
@@ -55,9 +56,12 @@ export default function TimelineClient({ posts: initialPosts, tags }: { posts: a
   const confirmDelete = async () => {
     if (!deleteModal.slug) return;
     try {
-      const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-      const config = await configRes.json();
-      const res = await fetch(`http://127.0.0.1:${config.api_port}/api/drafts/delete`, {
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        showToast("在线模式不支持此操作", "warning");
+        return;
+      }
+      const res = await fetch(`${baseUrl}/api/drafts/delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: deleteModal.slug })

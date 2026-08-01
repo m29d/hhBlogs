@@ -8,6 +8,7 @@ import { useOperations } from '../context/OperationContext';
 import { useToast } from './ToastProvider';
 import { AlertTriangle } from 'lucide-react';
 import { siteConfig } from '../siteConfig';
+import { getApiBaseUrl } from '../lib/backend';
 
 export default function Navbar() {
   const [showNav, setShowNav] = useState(true);
@@ -24,9 +25,13 @@ export default function Navbar() {
   useEffect(() => {
     const fetchPath = async () => {
       try {
-        const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-        const config = await configRes.json();
-        const res = await fetch(`http://127.0.0.1:${config.api_port}/api/deploy/config`);
+        const baseUrl = await getApiBaseUrl();
+        if (!baseUrl) {
+          const path = localStorage.getItem('targetBlogPath') || "F:/Projects/my-blog";
+          setTargetBlogPath(path);
+          return;
+        }
+        const res = await fetch(`${baseUrl}/api/deploy/config`);
         if (res.ok) {
           const data = await res.json();
           if (data.blogPath) {
@@ -95,9 +100,11 @@ export default function Navbar() {
       try {
         showToast(`🔍 正在准备发送 ${operations.length} 个任务...`, "info");
 
-        const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-        const configData = await configRes.json();
-        const apiBase = `http://127.0.0.1:${configData.api_port}`;
+        const apiBase = await getApiBaseUrl();
+        if (!apiBase) {
+          showToast("在线模式不支持此操作", "warning");
+          return;
+        }
 
         for (const op of operations) {
           let apiUrl = '';
@@ -171,11 +178,14 @@ export default function Navbar() {
     setSyncModalOpen(false);
 
     try {
-      const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-      const configData = await configRes.json();
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        showToast("在线模式不支持此操作", "warning");
+        return;
+      }
       showToast("🚀 正在镜像数据至目标项目，请稍候...", "info");
 
-      const res = await fetch(`http://127.0.0.1:${configData.api_port}/api/sync/execute`, {
+      const res = await fetch(`${baseUrl}/api/sync/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ blogPath: targetBlogPath })

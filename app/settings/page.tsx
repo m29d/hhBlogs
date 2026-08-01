@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOperations } from '../../context/OperationContext';
 import { siteConfig } from '../../siteConfig';
+import { getApiBaseUrl } from '../../lib/backend';
 import Navbar from '../../components/Navbar';
 import PageTransition from '../../components/PageTransition';
 import { ToastProvider, useToast } from '../../components/ToastProvider';
@@ -59,11 +60,15 @@ function SettingsContent() {
 
   useEffect(() => {
     const fetchRealConfig = async () => {
-      try {
-        const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-        const configData = await configRes.json();
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        console.log("ℹ️ Python 后端不可用（Vercel 部署模式），使用静态配置");
+        showToast("在线模式：使用静态配置数据", "info");
+        return;
+      }
 
-        const res = await fetch(`http://127.0.0.1:${configData.api_port}/api/config/get`, { cache: 'no-store' });
+      try {
+        const res = await fetch(`${baseUrl}/api/config/get`, { cache: 'no-store' });
         const data = await res.json();
 
         if (data.success && data.data) {
@@ -77,7 +82,6 @@ function SettingsContent() {
             buildDate: data.data.buildDate || prev.buildDate,
             icpConfig: data.data.icpConfig || prev.icpConfig,
             footerBadges: data.data.footerBadges ? [...data.data.footerBadges] : prev.footerBadges,
-            // 👇 🌟 合并后端发来的小猫配置
             geminiConfig: { ...(prev.geminiConfig || {}), ...(data.data.geminiConfig || {}) }
           }));
         } else {
@@ -86,7 +90,7 @@ function SettingsContent() {
         }
       } catch (error) {
         console.error("❌ 请求后端配置通道断开:", error);
-        showToast("无法连接到 Python 后端服务", "error");
+        showToast("后端连接异常，使用静态配置数据", "warning");
       }
     };
 
@@ -98,10 +102,10 @@ function SettingsContent() {
   };
 
   const fetchMusicDetail = async (id: string) => {
+    const baseUrl = await getApiBaseUrl();
+    if (!baseUrl) return { error: true, id, name: "在线模式不支持音乐查询" };
     try {
-      const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-      const configData = await configRes.json();
-      const res = await fetch(`http://127.0.0.1:${configData.api_port}/api/music/query/${id}`, { cache: 'no-store' });
+      const res = await fetch(`${baseUrl}/api/music/query/${id}`, { cache: 'no-store' });
       const data = await res.json();
       return data.success ? data.data : { error: true, id, name: "查询失败或无版权" };
     } catch (error) {

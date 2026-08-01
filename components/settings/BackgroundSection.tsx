@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../ToastProvider';
+import { getApiBaseUrl } from '../../lib/backend';
 
 export default function BackgroundSection({ formData, handleUpdate, pushToQueue }: any) {
   const { showToast } = useToast();
@@ -50,8 +51,11 @@ export default function BackgroundSection({ formData, handleUpdate, pushToQueue 
     showToast("正在将图片传送至图床引擎...", "info");
 
     try {
-      const configRes = await fetch(`/backend_config.json?t=${Date.now()}`);
-      const configData = await configRes.json();
+      const baseUrl = await getApiBaseUrl();
+      if (!baseUrl) {
+        showToast("在线模式不支持此操作", "warning");
+        return;
+      }
 
       // 构建 multipart/form-data
       const uploadData = new FormData();
@@ -59,7 +63,7 @@ export default function BackgroundSection({ formData, handleUpdate, pushToQueue 
       uploadData.append('url', picUrl);
       uploadData.append('token', picToken);
 
-      const res = await fetch(`http://127.0.0.1:${configData.api_port}/api/picbed/upload`, {
+      const res = await fetch(`${baseUrl}/api/picbed/upload`, {
         method: 'POST',
         body: uploadData,
       });
