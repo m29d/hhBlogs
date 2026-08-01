@@ -3,9 +3,9 @@
  * 用于 Vercel 部署模式下替代本地文件系统操作
  */
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
-const REPO_OWNER = process.env.GITHUB_REPO_OWNER || 'm29d';
-const REPO_NAME = process.env.GITHUB_REPO_NAME || 'hhBlogs';
+export const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+export const REPO_OWNER = process.env.GITHUB_REPO_OWNER || 'm29d';
+export const REPO_NAME = process.env.GITHUB_REPO_NAME || 'hhBlogs';
 const API_BASE = 'https://api.github.com';
 
 interface GitHubFile {
