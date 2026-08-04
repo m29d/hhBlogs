@@ -1,5 +1,3 @@
-** This session may be vulnerable to "store now, decrypt later" attacks.
-** The server may need to be upgraded. See https://openssh.com/pq.html
 "use client";
 
 import Link from 'next/link';
