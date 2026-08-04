@@ -11,9 +11,7 @@ import { ArrowLeft, AlertTriangle, Save, LogOut } from 'lucide-react';
 import { useToast } from '../../components/ToastProvider';
 import { useOperations } from '../../context/OperationContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getApiBaseUrl } from '../../lib/backend';
 
-// 🌟 核心修改 1：把原本暴露的主函数改名为 EditorContent（不带 export default）
 function EditorContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -52,13 +50,7 @@ function EditorContent() {
     const fetchTags = async () => {
       setIsLoadingTags(true);
     try {
-      const baseUrl = await getApiBaseUrl();
-      if (!baseUrl) {
-        setHistoryPostTags([]);
-        setHistoryChatterTags([]);
-        return;
-      }
-      const res = await fetch(`${baseUrl}/api/drafts/all_tags`);
+      const res = await fetch(`/api/drafts/all_tags`);
         const data = await res.json();
         if (data.success) {
           setHistoryPostTags(data.postTags || []);
@@ -74,13 +66,7 @@ function EditorContent() {
     if (currentDocId !== 'new') {
       const loadDraft = async () => {
         try {
-          const baseUrl = await getApiBaseUrl();
-          if (!baseUrl) {
-            showToast("在线模式不支持此操作", "warning");
-            return;
-          }
-
-          const res = await fetch(`${baseUrl}/api/drafts/get`, {
+          const res = await fetch(`/api/drafts/get`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: currentDocId, type: docType })
@@ -98,11 +84,11 @@ function EditorContent() {
             setContent(data.draft.content || '');
 
             setTimeout(() => setHasUnsavedChanges(false), 500);
-            showToast("✅ 已读取本地源数据", "success");
+            showToast("已从 GitHub 读取源数据", "success");
           } else {
-             showToast(data.message || "❌ 未找到草稿或原文件", "error");
+             showToast(data.message || "未找到草稿或原文件", "error");
           }
-        } catch (e) { showToast("❌ 读取失败", "error"); }
+        } catch (e) { showToast("读取失败", "error"); }
       };
       loadDraft();
     }
@@ -135,7 +121,7 @@ function EditorContent() {
 
   const handleSave = async (isPublish: boolean, shouldExitAfterSave: boolean = false) => {
     if (!title.trim() && docType !== 'about') {
-      showToast("⚠️ 请填写标题", "warning"); return;
+      showToast("请填写标题", "warning"); return;
     }
     const payload = {
       id: docType === 'about' ? 'about' : (currentDocId === 'new' ? null : currentDocId),
@@ -146,39 +132,48 @@ function EditorContent() {
     };
 
     if (isPublish) {
-      addOperation({
-        id: `publish_${Date.now()}`,
-        type: "publish_article",
-        label: `发布: ${title || '无标题'}`,
-        value: payload
-      });
-      setHasUnsavedChanges(false);
-      showToast("🚀 已加入待处理队列！", "info");
-      if (shouldExitAfterSave) router.back();
+      setIsSaving(true);
+      try {
+        const res = await fetch(`/api/drafts/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          setLastSaved(new Date().toLocaleTimeString());
+          setHasUnsavedChanges(false);
+          showToast("已发布到 GitHub！", "success");
+          if (shouldExitAfterSave) router.back();
+        } else {
+          showToast(data.message || "发布失败", "error");
+        }
+      } catch (e) {
+        showToast("发布失败", "error");
+      } finally {
+        setIsSaving(false);
+      }
       return;
     }
 
     setIsSaving(true);
     try {
-      const baseUrl = await getApiBaseUrl();
-      if (!baseUrl) {
-        showToast("在线模式不支持此操作", "warning");
-        return;
-      }
-      const res = await fetch(`${baseUrl}/api/drafts/save`, {
+      const res = await fetch(`/api/drafts/save`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {
         setLastSaved(new Date().toLocaleTimeString());
         setHasUnsavedChanges(false);
-        showToast("💾 草稿已落盘", "success");
+        showToast("草稿已保存到 GitHub", "success");
         if (shouldExitAfterSave) {
           setExitModalOpen(false);
           router.back();
         }
+      } else {
+        showToast(data.message || "保存失败", "error");
       }
-    } catch (e) { showToast("❌ 保存失败", "error"); }
+    } catch (e) { showToast("保存失败", "error"); }
     finally { setIsSaving(false); }
   };
 
@@ -262,7 +257,6 @@ function EditorContent() {
   );
 }
 
-// 🌟 核心修改 2：在底部暴露真正的 EditorPage，并用 Suspense 把里面的内容套起来
 export default function EditorPage() {
   return (
     <Suspense fallback={
