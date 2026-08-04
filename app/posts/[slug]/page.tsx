@@ -52,7 +52,8 @@ function extractToc(content: string) {
 }
 
 async function getPostData(slug: string) {
-  const fullPath = path.join(process.cwd(), 'posts', `${slug}.md`);
+  const decodedSlug = decodeURIComponent(slug);
+  const fullPath = path.join(process.cwd(), 'posts', `${decodedSlug}.md`);
   const fileContents = fs.readFileSync(fullPath, 'utf8');
   let { data, content } = matter(fileContents);
 
@@ -112,6 +113,7 @@ async function getPostData(slug: string) {
 }
 
 function getRecentPosts(currentSlug: string) {
+  currentSlug = decodeURIComponent(currentSlug);
   const postsDirectory = path.join(process.cwd(), 'posts');
   let fileNames: string[] = [];
   try { fileNames = fs.readdirSync(postsDirectory).filter(f => f.endsWith('.md')); } catch(e) {}
