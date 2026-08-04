@@ -1,0 +1,23 @@
+name: Deploy to China Mirror
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/xhblogs-full
+            git pull origin main
+            npm install
+            NODE_OPTIONS="--max-old-space-size=2048" npm run build
+            systemctl restart xhblogs-full
