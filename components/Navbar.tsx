@@ -1,3 +1,5 @@
+** This session may be vulnerable to "store now, decrypt later" attacks.
+** The server may need to be upgraded. See https://openssh.com/pq.html
 "use client";
 
 import Link from 'next/link';
@@ -71,7 +73,6 @@ export default function Navbar() {
     { name: '📝 草稿箱', href: '/drafts' },
     { name: '友链', href: '/friends' },
     { name: '关于', href: '/about' },
-    { name: '⚙️ 设置', href: '/settings' },
   ];
 
   const handleMinimize = () => {
