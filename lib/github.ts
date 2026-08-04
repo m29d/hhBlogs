@@ -35,16 +35,44 @@ export async function readFile(path: string): Promise<GitHubFile | null> {
 }
 
 /**
+ * 列出 GitHub 仓库中指定目录下的文件
+ */
+export async function listFiles(dirPath: string): Promise<{ name: string; path: string; type: string }[] | null> {
+  if (!GITHUB_TOKEN) return null;
+  try {
+    const res = await fetch(`${API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${dirPath}`, {
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!Array.isArray(data)) return null;
+    return data.map((item: any) => ({ name: item.name, path: item.path, type: item.type }));
+  } catch {
+    return null;
+  }
+}
+
+/**
  * 向 GitHub 仓库写入文件（自动提交）
+ * sha 为 undefined 时创建新文件，否则更新已有文件
  */
 export async function writeFile(
   path: string,
   content: string,
-  sha: string,
+  sha: string | undefined,
   message: string
 ): Promise<boolean> {
   if (!GITHUB_TOKEN) return false;
   try {
+    const body: Record<string, any> = {
+      message,
+      content: Buffer.from(content, 'utf-8').toString('base64'),
+    };
+    if (sha) body.sha = sha;
+
     const res = await fetch(`${API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
       method: 'PUT',
       headers: {
@@ -52,11 +80,7 @@ export async function writeFile(
         Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        message,
-        content: Buffer.from(content, 'utf-8').toString('base64'),
-        sha,
-      }),
+      body: JSON.stringify(body),
     });
     return res.ok;
   } catch {
