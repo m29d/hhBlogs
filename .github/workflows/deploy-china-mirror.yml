@@ -39,7 +39,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "next-build.tar.gz"
           target: "/opt/xhblogs-full"
-          timeout: 120
+          timeout: 120s
 
       - name: Deploy and restart
         uses: appleboy/ssh-action@v1
