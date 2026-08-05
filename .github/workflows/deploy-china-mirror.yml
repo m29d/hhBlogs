@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: deploy-to-server
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -35,6 +39,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "next-build.tar.gz"
           target: "/opt/xhblogs-full"
+          timeout: 120
 
       - name: Deploy and restart
         uses: appleboy/ssh-action@v1
@@ -42,6 +47,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 60
           script: |
             cd /opt/xhblogs-full
             git pull origin main
