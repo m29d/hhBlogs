@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile, updateSiteConfigContent } from '@/lib/github';
 import { isAuthenticated } from '@/lib/auth';
+import { exec } from 'child_process';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,9 +36,18 @@ export async function POST(req: Request) {
     );
 
     if (success) {
+      // 异步触发服务器重新构建（不阻塞响应）
+      exec('sudo /opt/xhblogs-full/rebuild.sh', (error, stdout, stderr) => {
+        if (error) {
+          console.error('[rebuild] failed:', error.message);
+        } else {
+          console.log('[rebuild] completed:', stdout);
+        }
+      });
+
       return NextResponse.json({
         success: true,
-        message: '配置已提交到 GitHub，正在重新构建',
+        message: '配置已保存，正在自动重新构建并部署（约需1-2分钟）',
       });
     }
     return NextResponse.json({ success: false, message: '提交到 GitHub 失败' });
