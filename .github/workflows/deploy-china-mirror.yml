@@ -12,8 +12,6 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Skip web editor commits - handled by server-side rebuild.sh
-    if: "!contains(github.event.head_commit.message, 'via web editor')"
     steps:
       - name: Deploy and build on server
         uses: appleboy/ssh-action@v1
@@ -29,8 +27,9 @@ jobs:
             sudo systemctl stop xhblogs-full
             sudo docker stop lsky-free mysql_z3rp-mysql_z3rP-1 2>/dev/null
 
-            # Pull latest code
-            git pull origin main
+            # Fetch latest code (use reset to avoid merge conflicts)
+            git fetch origin main
+            git reset --hard origin/main
 
             # Install dependencies and build
             npm install
