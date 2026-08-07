@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { readFile, writeFile } from '@/lib/github';
+import { isAuthenticated } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+  // 认证检查
+  if (!isAuthenticated(req)) {
+    return NextResponse.json({ success: false, message: '未授权，请先登录' }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { id, type, title, tags, cover, mood, description, content, date, published } = body;
