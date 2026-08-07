@@ -5,7 +5,7 @@ export const siteConfig = {
   title: "沐晴の编程blog",
   faviconUrl: "https://img1.baidu.com/it/u=1696057077,71592722&fm=253&app=138&f=JPEG?w=800&h=1235",
   authorName: "沐晴",
-  bio: "苦命计算机学生一枚^.^",
+  bio: "苦命计算机学生一枚^_^自动构建测试",
 
   navTitle: "沐晴",
 
