@@ -12,6 +12,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Skip web editor commits - handled by server-side rebuild.sh
+    if: "!contains(github.event.head_commit.message, 'via web editor')"
     steps:
       - name: Deploy and build on server
         uses: appleboy/ssh-action@v1
@@ -24,8 +26,8 @@ jobs:
             cd /opt/xhblogs-full
 
             # Stop services to free memory for build
-            systemctl stop xhblogs-full
-            docker stop lsky-free mysql_z3rp-mysql_z3rP-1 2>/dev/null
+            sudo systemctl stop xhblogs-full
+            sudo docker stop lsky-free mysql_z3rp-mysql_z3rP-1 2>/dev/null
 
             # Pull latest code
             git pull origin main
@@ -34,9 +36,12 @@ jobs:
             npm install
             NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
+            # Copy static files to standalone
+            cp -r .next/static .next/standalone/.next/
+
             # Restart services
-            systemctl start xhblogs-full
-            docker start mysql_z3rp-mysql_z3rP-1 lsky-free 2>/dev/null
+            sudo systemctl start xhblogs-full
+            sudo docker start mysql_z3rp-mysql_z3rP-1 lsky-free 2>/dev/null
 
             # Verify blog is up
             sleep 3
