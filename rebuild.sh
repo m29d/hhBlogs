@@ -8,5 +8,5 @@ npm run build 2>&1 | tail -5
 echo '[rebuild] copying static files...'
 cp -r .next/static .next/standalone/.next/
 echo '[rebuild] restarting service...'
-systemctl restart xhblogs-full
+sudo systemctl restart xhblogs-full
 echo '[rebuild] DONE'
