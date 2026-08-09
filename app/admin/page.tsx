@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Settings, Image as ImageIcon, Link2, FileText, Sliders, LogOut,
-  Save, Loader2, Plus, Trash2, Check, AlertCircle, Eye, EyeOff, RotateCcw, Shield, KeyRound
+  Save, Loader2, Plus, Trash2, Check, AlertCircle, Eye, EyeOff, RotateCcw, Shield, KeyRound, PenSquare
 } from 'lucide-react';
+import AdminEditorPanel from '@/components/admin/AdminEditorPanel';
 
 // ===================== 类型定义 =====================
-type TabId = 'site' | 'appearance' | 'social' | 'content' | 'advanced' | 'security';
+type TabId = 'site' | 'appearance' | 'social' | 'content' | 'advanced' | 'security' | 'editor';
 
 interface ConfigData {
   [key: string]: any;
@@ -257,6 +258,7 @@ export default function AdminPage() {
     { id: 'content', name: '内容设置', icon: <FileText size={18} /> },
     { id: 'advanced', name: '高级配置', icon: <Sliders size={18} /> },
     { id: 'security', name: '安全设置', icon: <Shield size={18} /> },
+    { id: 'editor', name: '内容创作', icon: <PenSquare size={18} /> },
   ];
 
   // ===================== 渲染各标签页 =====================
@@ -469,6 +471,7 @@ export default function AdminPage() {
     content: renderContentTab(),
     advanced: renderAdvancedTab(),
     security: renderSecurityTab(),
+    editor: <AdminEditorPanel />,
   };
 
   // ===================== 加载状态 =====================
@@ -539,8 +542,8 @@ export default function AdminPage() {
           <h2 className="text-xl font-black text-slate-800 dark:text-white">
             {menuItems.find(m => m.id === activeTab)?.name}
           </h2>
-          {/* 安全设置页不显示保存按钮 */}
-          {activeTab !== 'security' && (
+          {/* 安全设置页和内容创作页不显示保存按钮 */}
+          {activeTab !== 'security' && activeTab !== 'editor' && (
             <div className="flex items-center gap-3">
               {hasChanges && (
                 <span className="flex items-center gap-1.5 text-xs font-bold text-amber-500">
@@ -567,16 +570,22 @@ export default function AdminPage() {
         </div>
 
         {/* 表单内容区 */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="max-w-2xl mx-auto bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-slate-700/50 p-8 shadow-lg"
-          >
-            {tabContent[activeTab]}
-          </motion.div>
+        <div className={`flex-1 overflow-hidden ${activeTab === 'editor' ? 'p-0' : 'overflow-y-auto p-8'}`}>
+          {activeTab === 'editor' ? (
+            <div className="h-full">
+              {tabContent[activeTab]}
+            </div>
+          ) : (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="max-w-2xl mx-auto bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl rounded-3xl border border-white/50 dark:border-slate-700/50 p-8 shadow-lg"
+            >
+              {tabContent[activeTab]}
+            </motion.div>
+          )}
         </div>
       </div>
 
