@@ -121,9 +121,10 @@ interface EditorProps {
   onOpenImageTool: () => void;
   isTitleLocked?: boolean;
   onChange?: () => void;
+  onWordCount?: (stats: { words: number; chars: number }) => void;
 }
 
-const RichTextEditor = forwardRef<RichTextEditorHandle, EditorProps>(({ title, setTitle, initialContent, onOpenImageTool, isTitleLocked, onChange }, ref) => {
+const RichTextEditor = forwardRef<RichTextEditorHandle, EditorProps>(({ title, setTitle, initialContent, onOpenImageTool, isTitleLocked, onChange, onWordCount }, ref) => {
   const [textColors, setTextColors] = useState<string[]>(['#6366F1', '#000000']);
   const [highlightColors, setHighlightColors] = useState<string[]>(['#FEF08A', '#BBF7D0']);
   const [showTextPicker, setShowTextPicker] = useState(false);
@@ -156,6 +157,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, EditorProps>(({ title, s
     immediatelyRender: false,
     onUpdate: () => {
       if (onChange) onChange();
+      if (onWordCount && editor) {
+        const text = editor.getText();
+        const chars = text.length;
+        const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+        onWordCount({ words, chars });
+      }
     },
     onTransaction: () => {
       setRenderTrigger(v => v + 1);
