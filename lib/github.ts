@@ -89,6 +89,27 @@ export async function writeFile(
 }
 
 /**
+ * 删除 GitHub 仓库中的文件
+ */
+export async function deleteFile(path: string, sha: string, message: string): Promise<boolean> {
+  if (!GITHUB_TOKEN) return false;
+  try {
+    const res = await fetch(`${API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message, sha }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * 解析 siteConfig.ts 为 JSON 对象
  */
 export function parseSiteConfig(content: string): Record<string, any> {
