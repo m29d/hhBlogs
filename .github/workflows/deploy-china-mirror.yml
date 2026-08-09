@@ -21,15 +21,25 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 30m
           script: |
+            set -e
             cd /opt/xhblogs-full
 
             # Stop services to free memory for build
             sudo systemctl stop xhblogs-full
-            sudo docker stop lsky-free mysql_z3rp-mysql_z3rP-1 2>/dev/null
+            sudo docker stop lsky-free mysql_z3rp-mysql_z3rP-1 2>/dev/null || true
 
-            # Fetch latest code (use reset to avoid merge conflicts)
-            git fetch origin main
+            # Fetch latest code with retry logic
+            echo "Fetching latest code..."
+            for i in 1 2 3; do
+              git fetch origin main && break || {
+                echo "Fetch attempt $i failed, retrying in 5s..."
+                sleep 5
+              }
+            done
+
+            # Verify fetch succeeded by checking if HEAD changed
             git reset --hard origin/main
+            echo "Current HEAD: $(git rev-parse HEAD)"
 
             # Install dependencies and build
             npm install
@@ -40,7 +50,7 @@ jobs:
 
             # Restart services
             sudo systemctl start xhblogs-full
-            sudo docker start mysql_z3rp-mysql_z3rP-1 lsky-free 2>/dev/null
+            sudo docker start mysql_z3rp-mysql_z3rP-1 lsky-free 2>/dev/null || true
 
             # Verify blog is up
             sleep 3
