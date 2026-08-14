@@ -1,4 +1,4 @@
-name: Deploy to China Mirror
+﻿name: Deploy to China Mirror
 
 on:
   push:
@@ -23,10 +23,10 @@ jobs:
           script: |
             set -e
             cd /opt/xhblogs-full
-            
+
             sudo systemctl stop xhblogs-full
             sudo docker stop lsky-free mysql_z3rp-mysql_z3rP-1 2>/dev/null || true
-            
+
             echo "Fetching latest code..."
             for i in 1 2 3; do
               git fetch origin main && break || {
@@ -36,22 +36,17 @@ jobs:
             done
             git reset --hard origin/main
             echo "Current HEAD: $(git rev-parse HEAD)"
-            
-            # Update portal files if they exist
-            if [ -f portal/index.html ]; then
-              sudo mkdir -p /var/www/portal
-              sudo cp portal/index.html /var/www/portal/
-              sudo cp portal/bg.jpg /var/www/portal/ 2>/dev/null || true
-              echo "Portal files updated"
-            fi
-            
+
+            chmod +x scripts/deploy-portal.sh
+            bash scripts/deploy-portal.sh || echo "WARNING: Portal deployment had issues"
+
             npm install
             NODE_OPTIONS="--max-old-space-size=2048" npm run build
             cp -r .next/static .next/standalone/.next/
-            
+
             sudo systemctl start xhblogs-full
             sudo docker start mysql_z3rp-mysql_z3rP-1 lsky-free 2>/dev/null || true
-            
+
             sleep 3
             curl -s -o /dev/null -w "Blog HTTP status: %{http_code}\n" http://127.0.0.1:3003/ || echo "WARNING: blog not responding"
             echo "=== Deployment Complete ==="
