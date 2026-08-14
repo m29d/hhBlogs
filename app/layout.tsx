@@ -91,6 +91,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                     {children}
                   </div>
 
+                  <footer className="relative z-10 w-full py-4 px-4 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200/30 dark:border-slate-700/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-sm">
+                    <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 max-w-6xl mx-auto">
+                      <span>{\u00A9} {new Date().getFullYear()} {siteConfig.title}</span>
+                      <a href={siteConfig.icpConfig.link} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">
+                        {siteConfig.icpConfig.name}
+                      </a>
+                      <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=51012202002558" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">
+                        \u5DDD\u516C\u7F51\u5B89\u5907 51012202002558\u53F7
+                      </a>
+                    </div>
+                  </footer>
+
                   <FloatingPlayer />
                   <GlobalToolbox />
                   <ClickEffect />
