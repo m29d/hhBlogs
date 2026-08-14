@@ -3,8 +3,8 @@ set -e
 
 echo "=== Deploying Portal ==="
 sudo mkdir -p /var/www/portal
-cp /opt/xhblogs-full/portal/index.html /var/www/portal/
-cp /opt/xhblogs-full/portal/bg.jpg /var/www/portal/ 2>/dev/null || true
+sudo cp /opt/xhblogs-full/portal/index.html /var/www/portal/
+sudo cp /opt/xhblogs-full/portal/bg.jpg /var/www/portal/ 2>/dev/null || true
 echo "Portal files copied to /var/www/portal/"
 
 echo "=== Configuring Nginx ==="
