@@ -22,12 +22,121 @@ jobs:
           command_timeout: 30m
           script: |
             set -e
+            
+            echo "=== Step 1: Deploy Portal Page ==="
+            sudo mkdir -p /var/www/portal
+            if [ -f /opt/xhblogs-full/portal/index.html ]; then
+              sudo cp /opt/xhblogs-full/portal/index.html /var/www/portal/
+              sudo cp /opt/xhblogs-full/portal/bg.jpg /var/www/portal/
+              echo "Portal files deployed"
+            else
+              echo "Portal files not found in repo yet"
+            fi
+            
+            echo "=== Step 2: Configure Nginx ==="
+            # Get current Nginx config path
+            NGINX_CONF=""
+            if [ -f /etc/nginx/sites-enabled/default ]; then
+              NGINX_CONF="/etc/nginx/sites-enabled/default"
+            elif [ -f /etc/nginx/conf.d/default.conf ]; then
+              NGINX_CONF="/etc/nginx/conf.d/default.conf"
+            fi
+            echo "Current Nginx config: $NGINX_CONF"
+            
+            if [ -n "$NGINX_CONF" ] && [ -f /var/www/portal/index.html ]; then
+              # Backup current config
+              sudo cp "$NGINX_CONF" "$NGINX_CONF.bak.$(date +%Y%m%d%H%M%S)"
+              
+              # Get SSL cert paths from current config
+              SSL_CERT=$(grep -oP 'ssl_certificate\s+\K[^;]+' "$NGINX_CONF" | head -1)
+              SSL_KEY=$(grep -oP 'ssl_certificate_key\s+\K[^;]+' "$NGINX_CONF" | head -1)
+              echo "SSL cert: $SSL_CERT"
+              echo "SSL key: $SSL_KEY"
+              
+              if [ -z "$SSL_CERT" ] || [ -z "$SSL_KEY" ]; then
+                echo "WARNING: Could not find SSL cert paths. Skipping Nginx reconfiguration."
+              else
+                # Try to get SSL cert for blog subdomain
+                echo "Attempting to get SSL cert for blog.hhblog.tech..."
+                sudo certbot --nginx -d blog.hhblog.tech --non-interactive --agree-tos -m 1664300699@qq.com --redirect 2>/dev/null || echo "NOTE: blog.hhblog.tech SSL cert failed - DNS may not be ready yet"
+                
+                # Write portal config (main domain serves static files)
+                sudo tee /etc/nginx/sites-enabled/hhblog-portal > /dev/null << PORTALEOF
+            server {
+                listen 80;
+                server_name hhblog.tech www.hhblog.tech;
+                return 301 https://$host$request_uri;
+            }
+            server {
+                listen 443 ssl http2;
+                server_name hhblog.tech www.hhblog.tech;
+                
+                ssl_certificate $SSL_CERT;
+                ssl_certificate_key $SSL_KEY;
+                
+                root /var/www/portal;
+                index index.html;
+                
+                location / {
+                    try_files $uri $uri/ =404;
+                }
+                
+                location /resume {
+                    try_files $uri $uri/ =404;
+                }
+            }
+            PORTALEOF
+                
+                # Write blog subdomain config (proxy to Next.js)
+                sudo tee /etc/nginx/sites-enabled/blog-subdomain > /dev/null << BLOGEOF
+            server {
+                listen 80;
+                server_name blog.hhblog.tech;
+                return 301 https://$host$request_uri;
+            }
+            server {
+                listen 443 ssl http2;
+                server_name blog.hhblog.tech;
+                
+                ssl_certificate $SSL_CERT;
+                ssl_certificate_key $SSL_KEY;
+                
+                location / {
+                    proxy_pass http://127.0.0.1:3003;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection "upgrade";
+                }
+            }
+            BLOGEOF
+                
+                # Test nginx config
+                if sudo nginx -t 2>&1; then
+                  echo "Nginx config test passed. Removing old default config..."
+                  sudo rm -f "$NGINX_CONF"
+                  sudo nginx -t && sudo systemctl reload nginx
+                  echo "Nginx reloaded with portal + blog subdomain config"
+                else
+                  echo "Nginx config test FAILED. Restoring backup..."
+                  sudo rm -f /etc/nginx/sites-enabled/hhblog-portal
+                  sudo rm -f /etc/nginx/sites-enabled/blog-subdomain
+                  sudo cp "$NGINX_CONF.bak."* "$NGINX_CONF" 2>/dev/null || true
+                  sudo systemctl reload nginx
+                fi
+              fi
+            fi
+            
+            echo "=== Step 3: Build Blog ==="
             cd /opt/xhblogs-full
-
+            
             # Stop services to free memory for build
             sudo systemctl stop xhblogs-full
             sudo docker stop lsky-free mysql_z3rp-mysql_z3rP-1 2>/dev/null || true
-
+            
             # Fetch latest code with retry logic
             echo "Fetching latest code..."
             for i in 1 2 3; do
@@ -36,22 +145,30 @@ jobs:
                 sleep 5
               }
             done
-
-            # Verify fetch succeeded by checking if HEAD changed
+            
             git reset --hard origin/main
             echo "Current HEAD: $(git rev-parse HEAD)"
-
+            
             # Install dependencies and build
             npm install
             NODE_OPTIONS="--max-old-space-size=2048" npm run build
-
+            
             # Copy static files to standalone
             cp -r .next/static .next/standalone/.next/
-
+            
             # Restart services
             sudo systemctl start xhblogs-full
             sudo docker start mysql_z3rp-mysql_z3rP-1 lsky-free 2>/dev/null || true
-
+            
             # Verify blog is up
             sleep 3
-            curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3003/ || echo "WARNING: blog not responding"
+            curl -s -o /dev/null -w "Blog HTTP status: %{http_code}
+" http://127.0.0.1:3003/ || echo "WARNING: blog not responding"
+            
+            # Verify portal is up
+            if [ -f /var/www/portal/index.html ]; then
+              curl -s -o /dev/null -w "Portal HTTP status: %{http_code}
+" http://127.0.0.1/ -H "Host: hhblog.tech" || echo "Portal check failed"
+            fi
+            
+            echo "=== Deployment Complete ==="
