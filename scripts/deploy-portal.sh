@@ -8,15 +8,42 @@ sudo cp /opt/xhblogs-full/portal/bg.jpg /var/www/portal/ 2>/dev/null || true
 echo "Portal files copied to /var/www/portal/"
 
 echo "=== Configuring Nginx ==="
+echo "Searching for Nginx config..."
+echo "Listing /etc/nginx/sites-enabled/:"
+ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "  dir not found"
+echo "Listing /etc/nginx/conf.d/:"
+ls -la /etc/nginx/conf.d/ 2>/dev/null || echo "  dir not found"
+
 NGINX_CONF=""
-if [ -f /etc/nginx/sites-enabled/default ]; then
-    NGINX_CONF="/etc/nginx/sites-enabled/default"
-elif [ -f /etc/nginx/conf.d/default.conf ]; then
-    NGINX_CONF="/etc/nginx/conf.d/default.conf"
+# Check common locations
+for f in /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf; do
+    if [ -f "$f" ]; then
+        NGINX_CONF="$f"
+        break
+    fi
+done
+
+# Search for any config containing hhblog or server_name with proxy_pass
+if [ -z "$NGINX_CONF" ]; then
+    for f in /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*; do
+        if [ -f "$f" ] && grep -q "hhblog\|proxy_pass.*3003\|server_name" "$f" 2>/dev/null; then
+            NGINX_CONF="$f"
+            break
+        fi
+    done
+fi
+
+# Check nginx.conf itself
+if [ -z "$NGINX_CONF" ]; then
+    if grep -q "hhblog\|proxy_pass.*3003\|server_name" /etc/nginx/nginx.conf 2>/dev/null; then
+        NGINX_CONF="/etc/nginx/nginx.conf"
+    fi
 fi
 
 if [ -z "$NGINX_CONF" ]; then
-    echo "ERROR: Could not find Nginx config"
+    echo "ERROR: Could not find Nginx config with hhblog settings"
+    echo "Dumping all nginx config files for debugging:"
+    sudo nginx -T 2>&1 | head -100
     exit 1
 fi
 
