@@ -98,7 +98,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                         {siteConfig.icpConfig.name}
                       </a>
                       <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=51012202002558" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-500 transition-colors">
-                        \u5DDD\u516C\u7F51\u5B89\u5907 51012202002558\u53F7
+                        川公网安备 51012202002558号
                       </a>
                     </div>
                   </footer>
