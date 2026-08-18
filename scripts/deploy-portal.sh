@@ -7,64 +7,20 @@ sudo cp /opt/xhblogs-full/portal/index.html /var/www/portal/
 sudo cp /opt/xhblogs-full/portal/bg.jpg /var/www/portal/ 2>/dev/null || true
 echo "Portal files copied to /var/www/portal/"
 
-echo "=== Configuring Nginx ==="
-echo "Searching for Nginx config..."
-echo "Listing /etc/nginx/sites-enabled/:"
-ls -la /etc/nginx/sites-enabled/ 2>/dev/null || echo "  dir not found"
-echo "Listing /etc/nginx/conf.d/:"
-ls -la /etc/nginx/conf.d/ 2>/dev/null || echo "  dir not found"
-
-NGINX_CONF=""
-# Check common locations
-for f in /etc/nginx/sites-enabled/default /etc/nginx/conf.d/default.conf; do
+echo "=== Finding SSL certificates ==="
+SSL_CERT=""
+SSL_KEY=""
+for f in /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*; do
     if [ -f "$f" ]; then
-        NGINX_CONF="$f"
-        break
+        SSL_CERT=$(grep -oP 'ssl_certificate\s+\K[^;]+' "$f" 2>/dev/null | head -1)
+        SSL_KEY=$(grep -oP 'ssl_certificate_key\s+\K[^;]+' "$f" 2>/dev/null | head -1)
+        if [ -n "$SSL_CERT" ] && [ -n "$SSL_KEY" ]; then
+            break
+        fi
     fi
 done
 
-# Search for any config containing hhblog or server_name with proxy_pass
-if [ -z "$NGINX_CONF" ]; then
-    for f in /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*; do
-        if [ -f "$f" ] && grep -q "hhblog\|proxy_pass.*3003\|server_name" "$f" 2>/dev/null; then
-            NGINX_CONF="$f"
-            break
-        fi
-    done
-fi
-
-# Check nginx.conf itself
-if [ -z "$NGINX_CONF" ]; then
-    if grep -q "hhblog\|proxy_pass.*3003\|server_name" /etc/nginx/nginx.conf 2>/dev/null; then
-        NGINX_CONF="/etc/nginx/nginx.conf"
-    fi
-fi
-
-if [ -z "$NGINX_CONF" ]; then
-    echo "ERROR: Could not find Nginx config with hhblog settings"
-    echo "Dumping all nginx config files for debugging:"
-    sudo nginx -T 2>&1 | head -100
-    exit 1
-fi
-
-echo "Current Nginx config: $NGINX_CONF"
-
-if [ -f /etc/nginx/sites-enabled/hhblog-portal ]; then
-    echo "Portal config already exists. Reloading Nginx."
-    sudo systemctl reload nginx
-    exit 0
-fi
-
-sudo cp "$NGINX_CONF" "${NGINX_CONF}.bak.$(date +%Y%m%d%H%M%S)"
-
-SSL_CERT=$(grep -oP 'ssl_certificate\s+\K[^;]+' "$NGINX_CONF" | head -1)
-SSL_KEY=$(grep -oP 'ssl_certificate_key\s+\K[^;]+' "$NGINX_CONF" | head -1)
-
-echo "SSL cert: $SSL_CERT"
-echo "SSL key: $SSL_KEY"
-
 if [ -z "$SSL_CERT" ] || [ -z "$SSL_KEY" ]; then
-    echo "Trying common cert paths..."
     SSL_CERT=$(find /etc/letsencrypt/live -name "fullchain.pem" 2>/dev/null | head -1)
     SSL_KEY=$(find /etc/letsencrypt/live -name "privkey.pem" 2>/dev/null | head -1)
 fi
@@ -74,6 +30,33 @@ if [ -z "$SSL_CERT" ] || [ -z "$SSL_KEY" ]; then
     exit 1
 fi
 
+echo "SSL cert: $SSL_CERT"
+echo "SSL key: $SSL_KEY"
+
+echo "=== Cleaning up backup files in sites-enabled ==="
+sudo rm -f /etc/nginx/sites-enabled/*.bak.*
+
+echo "=== Removing conflicting Nginx configs ==="
+for f in /etc/nginx/sites-enabled/*; do
+    basename_f=$(basename "$f")
+    if [ "$basename_f" = "hhblog-portal" ] || [ "$basename_f" = "blog-subdomain" ]; then
+        continue
+    fi
+    if [ -f "$f" ]; then
+        has_hhblog=$(grep -c "hhblog\.tech" "$f" 2>/dev/null || echo 0)
+        has_blog_sub=$(grep -c "blog\.hhblog\.tech" "$f" 2>/dev/null || echo 0)
+        has_proxy_3003=$(grep -c "proxy_pass.*3003" "$f" 2>/dev/null || echo 0)
+        if [ "$has_hhblog" -gt 0 ] && [ "$has_blog_sub" -eq 0 ]; then
+            echo "  Removing conflicting config (has hhblog.tech, no subdomain): $f"
+            sudo rm -f "$f"
+        elif [ "$has_proxy_3003" -gt 0 ] && [ "$has_blog_sub" -eq 0 ]; then
+            echo "  Removing conflicting proxy config (proxy 3003, no subdomain): $f"
+            sudo rm -f "$f"
+        fi
+    fi
+done
+
+echo "=== Writing Nginx configs ==="
 cat > /tmp/hhblog-portal.conf << 'ENDPORTAL'
 server {
     listen 80;
@@ -130,18 +113,14 @@ sed -i "s|__SSL_KEY__|$SSL_KEY|g" /tmp/blog-subdomain.conf
 sudo cp /tmp/hhblog-portal.conf /etc/nginx/sites-enabled/hhblog-portal
 sudo cp /tmp/blog-subdomain.conf /etc/nginx/sites-enabled/blog-subdomain
 
-echo "Testing Nginx config..."
+echo "=== Testing Nginx config ==="
 if sudo nginx -t 2>&1; then
     echo "Nginx test passed!"
-    sudo rm -f "$NGINX_CONF"
     sudo systemctl reload nginx
     echo "SUCCESS: Nginx configured!"
     echo "  hhblog.tech -> Portal (static)"
     echo "  blog.hhblog.tech -> Blog (proxy to 3003)"
 else
-    echo "Nginx test FAILED! Restoring backup..."
-    sudo rm -f /etc/nginx/sites-enabled/hhblog-portal /etc/nginx/sites-enabled/blog-subdomain
-    sudo cp "${NGINX_CONF}.bak."* "$NGINX_CONF" 2>/dev/null || true
-    sudo systemctl reload nginx
-    echo "Backup restored."
+    echo "Nginx test FAILED!"
+    exit 1
 fi
