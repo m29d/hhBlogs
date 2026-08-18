@@ -4,776 +4,386 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>沐晴 | 个人主页</title>
-<link rel="icon" href="https://img1.baidu.com/it/u=1696057077,71592722&fm=253&app=138&f=JPEG?w=800&h=1235">
+<meta name="description" content="沐晴的个人主页 - 博客与简历">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #06080f;
-    --bg2: #0a0e1a;
-    --surface: rgba(255,255,255,0.04);
-    --surface-hover: rgba(255,255,255,0.08);
-    --border: rgba(255,255,255,0.08);
-    --border-hover: rgba(255,255,255,0.15);
-    --text: #e8ecf4;
-    --text-muted: #8b95a8;
-    --text-dim: #5a6580;
-    --accent: #a855f7;
-    --accent2: #06b6d4;
-    --accent3: #ec4899;
-    --accent4: #3b82f6;
-    --radius: 16px;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: "Noto Sans SC", -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: inherit; text-decoration: none; }
+*{margin:0;padding:0;box-sizing:border-box}
 
-  /* ===== Hero ===== */
-  .hero {
-    position: relative;
-    min-height: 100svh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-  }
-  .hero-bg img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.55;
-    animation: bgPulse 8s ease-in-out infinite;
-  }
-  @keyframes bgPulse {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 0.65; transform: scale(1.03); }
-  }
-  .hero-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background:
-      radial-gradient(ellipse at 30% 40%, rgba(168,85,247,0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 70% 60%, rgba(6,182,212,0.12) 0%, transparent 50%),
-      linear-gradient(180deg, rgba(6,8,15,0.4) 0%, rgba(6,8,15,0.6) 50%, rgba(6,8,15,0.95) 100%);
-  }
-  .hero-stars {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    overflow: hidden;
-  }
-  .star {
-    position: absolute;
-    width: 2px; height: 2px;
-    background: #fff;
-    border-radius: 50%;
-    animation: twinkle var(--dur, 3s) ease-in-out infinite;
-    animation-delay: var(--delay, 0s);
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.2; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.2); }
-  }
-  .hero-content {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    padding: 0 24px;
-    max-width: 800px;
-  }
-  .hero-tag {
-    display: inline-block;
-    padding: 6px 18px;
-    border-radius: 20px;
-    border: 1px solid rgba(168,85,247,0.3);
-    background: rgba(168,85,247,0.08);
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    margin-bottom: 28px;
-    animation: fadeUp 0.8s 0.1s both;
-  }
-  .hero-name {
-    font-size: clamp(56px, 12vw, 120px);
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -2px;
-    margin-bottom: 16px;
-    background: linear-gradient(135deg, #fff 0%, #c4b5fd 40%, #67e8f9 80%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: fadeUp 0.8s 0.2s both;
-  }
-  .hero-bio {
-    font-size: clamp(16px, 2.5vw, 22px);
-    color: var(--text-muted);
-    font-weight: 300;
-    margin-bottom: 40px;
-    animation: fadeUp 0.8s 0.4s both;
-  }
-  .hero-bio .cursor {
-    display: inline-block;
-    width: 2px;
-    height: 1em;
-    background: var(--accent2);
-    margin-left: 4px;
-    vertical-align: middle;
-    animation: blink 1s steps(2) infinite;
-  }
-  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-  .hero-cta {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
-    animation: fadeUp 0.8s 0.6s both;
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 32px;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    border: 1px solid var(--border);
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent4) 100%);
-    border: none;
-    color: #fff;
-    box-shadow: 0 4px 24px rgba(168,85,247,0.3);
-  }
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(168,85,247,0.5);
-  }
-  .btn-ghost {
-    background: var(--surface);
-    color: var(--text);
-    backdrop-filter: blur(12px);
-  }
-  .btn-ghost:hover {
-    background: var(--surface-hover);
-    border-color: var(--border-hover);
-    transform: translateY(-2px);
-  }
-  .scroll-indicator {
-    position: absolute;
-    bottom: 32px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
-    color: var(--text-dim);
-    font-size: 12px;
-    letter-spacing: 2px;
-    animation: fadeUp 0.8s 0.8s both, bounce 2s 1s ease-in-out infinite;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-  .scroll-line {
-    width: 1px;
-    height: 32px;
-    background: linear-gradient(180deg, var(--text-dim), transparent);
-  }
-  @keyframes bounce {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(8px); }
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+:root{
+  --bg:#0a0a0f;
+  --bg-2:#12121a;
+  --surface:#1a1a26;
+  --text:#e8e8f0;
+  --text-dim:#8888a0;
+  --text-mute:#555568;
+  --accent:#7c6cf0;
+  --accent-soft:rgba(124,108,240,.15);
+  --accent-glow:rgba(124,108,240,.4);
+  --border:rgba(255,255,255,.06);
+  --radius:12px;
+}
 
-  /* ===== Sections ===== */
-  .section {
-    position: relative;
-    padding: 100px 24px;
-    z-index: 2;
-  }
-  .section-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .section-label {
-    font-family: "JetBrains Mono", monospace;
-    font-size: 13px;
-    color: var(--accent2);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-  .section-title {
-    font-size: clamp(28px, 5vw, 42px);
-    font-weight: 700;
-    margin-bottom: 48px;
-    letter-spacing: -0.5px;
-  }
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  overflow-x:hidden;
+}
 
-  /* ===== Nav Cards ===== */
-  .nav-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 24px;
-  }
-  .nav-card {
-    position: relative;
-    padding: 40px 36px;
-    border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    backdrop-filter: blur(12px);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
-    cursor: pointer;
-  }
-  .nav-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: var(--radius);
-    padding: 1px;
-    background: linear-gradient(135deg, transparent, var(--card-glow, var(--accent)), transparent);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.4s;
-  }
-  .nav-card:hover::before { opacity: 1; }
-  .nav-card:hover {
-    transform: translateY(-4px);
-    background: var(--surface-hover);
-    border-color: var(--border-hover);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-  }
-  .nav-card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 24px;
-    font-size: 28px;
-  }
-  .nav-card-blog .nav-card-icon {
-    background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.2));
-    color: var(--accent);
-  }
-  .nav-card-resume .nav-card-icon {
-    background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.2));
-    color: var(--accent2);
-  }
-  .nav-card h3 {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-  .nav-card p {
-    color: var(--text-muted);
-    font-size: 14px;
-    line-height: 1.7;
-    margin-bottom: 20px;
-  }
-  .nav-card-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--card-glow, var(--accent));
-    transition: gap 0.3s;
-  }
-  .nav-card:hover .nav-card-link { gap: 12px; }
+/* ===== NAV ===== */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:20px 48px;
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(10,10,15,.6);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  transition:padding .3s ease;
+}
+nav.scrolled{padding:14px 48px}
+.logo{font-weight:700;font-size:18px;letter-spacing:-.5px;color:var(--text)}
+.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{
+  color:var(--text-dim);text-decoration:none;font-size:14px;font-weight:500;
+  transition:color .25s ease;position:relative;
+}
+.nav-links a:hover{color:var(--text)}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;
+  background:var(--accent);transform:scaleX(0);transition:transform .25s ease;
+}
+.nav-links a:hover::after{transform:scaleX(1)}
 
-  /* ===== About ===== */
-  .about-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: start;
-  }
-  .about-text p {
-    color: var(--text-muted);
-    font-size: 16px;
-    line-height: 2;
-    margin-bottom: 16px;
-  }
-  .about-text .highlight { color: var(--text); font-weight: 500; }
-  .tech-stack {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 24px;
-  }
-  .tech-badge {
-    padding: 6px 14px;
-    border-radius: 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    font-size: 13px;
-    font-family: "JetBrains Mono", monospace;
-    color: var(--text-muted);
-    transition: all 0.3s;
-  }
-  .tech-badge:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(168,85,247,0.08);
-  }
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-top: 32px;
-  }
-  .stat-card {
-    text-align: center;
-    padding: 24px 16px;
-    border-radius: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-  }
-  .stat-num {
-    font-size: 28px;
-    font-weight: 700;
-    font-family: "JetBrains Mono", monospace;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .stat-label {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 4px;
-  }
+/* ===== HERO ===== */
+.hero{
+  position:relative;min-height:100vh;display:flex;align-items:center;
+  padding:0 48px;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:url('bg.jpg') center/cover no-repeat;
+  opacity:.25;
+  filter:blur(2px) saturate(.8);
+}
+.hero-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,var(--bg) 0%,transparent 40%,transparent 60%,var(--bg) 100%);
+}
+.hero-glow{
+  position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,var(--accent-soft) 0%,transparent 70%);
+  top:20%;right:-100px;z-index:1;
+  animation:float 8s ease-in-out infinite;
+}
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-30px)}
+}
+.hero-content{position:relative;z-index:2;max-width:640px}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px;border-radius:100px;
+  background:var(--accent-soft);border:1px solid rgba(124,108,240,.2);
+  font-size:13px;color:var(--accent);font-weight:500;
+  margin-bottom:28px;
+  opacity:0;animation:fadeUp .8s .1s ease forwards;
+}
+.hero-tag .dot{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 8px var(--accent-glow);
+}
+.hero h1{
+  font-size:clamp(48px,8vw,96px);font-weight:900;
+  letter-spacing:-3px;line-height:1.05;
+  margin-bottom:16px;
+  opacity:0;animation:fadeUp .8s .2s ease forwards;
+}
+.hero h1 .accent{
+  background:linear-gradient(135deg,var(--accent) 0%,#a78bfa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero p{
+  font-size:18px;color:var(--text-dim);max-width:480px;
+  margin-bottom:40px;font-weight:300;
+  opacity:0;animation:fadeUp .8s .3s ease forwards;
+}
+.hero-cta{
+  display:flex;gap:16px;
+  opacity:0;animation:fadeUp .8s .4s ease forwards;
+}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 28px;border-radius:var(--radius);
+  font-size:15px;font-weight:500;text-decoration:none;
+  transition:all .25s ease;cursor:pointer;border:none;
+}
+.btn-primary{
+  background:var(--accent);color:#fff;
+  box-shadow:0 4px 24px var(--accent-glow);
+}
+.btn-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px var(--accent-glow);
+}
+.btn-ghost{
+  background:transparent;color:var(--text);
+  border:1px solid var(--border);
+}
+.btn-ghost:hover{
+  background:var(--surface);border-color:var(--text-mute);
+}
+.btn svg{width:18px;height:18px}
 
-  /* ===== Placeholder Sections ===== */
-  .placeholder-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-  }
-  .placeholder-card {
-    padding: 32px 24px;
-    border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    text-align: center;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-  .placeholder-card::after {
-    content: "即将上线";
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: rgba(168,85,247,0.15);
-    color: var(--accent);
-    font-family: "JetBrains Mono", monospace;
-  }
-  .placeholder-card:hover {
-    background: var(--surface-hover);
-    border-color: var(--border-hover);
-    transform: translateY(-2px);
-  }
-  .placeholder-icon {
-    font-size: 32px;
-    margin-bottom: 16px;
-    opacity: 0.6;
-  }
-  .placeholder-card h4 {
-    font-size: 17px;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-  .placeholder-card p {
-    font-size: 13px;
-    color: var(--text-dim);
-  }
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(24px)}
+  to{opacity:1;transform:translateY(0)}
+}
 
-  /* ===== Contact ===== */
-  .contact-row {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .contact-link {
-    flex: 1;
-    min-width: 200px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 20px 24px;
-    border-radius: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    transition: all 0.3s;
-  }
-  .contact-link:hover {
-    background: var(--surface-hover);
-    border-color: var(--border-hover);
-    transform: translateX(4px);
-  }
-  .contact-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .contact-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .contact-info .label {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-  .contact-info .value {
-    font-size: 14px;
-    color: var(--text);
-    font-family: "JetBrains Mono", monospace;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+/* ===== SECTIONS ===== */
+section{padding:100px 48px;position:relative}
+.section-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--text-mute);
+  text-transform:uppercase;letter-spacing:2px;
+  margin-bottom:12px;
+}
+.section-title{
+  font-size:clamp(28px,4vw,40px);font-weight:700;
+  letter-spacing:-1px;margin-bottom:48px;
+}
 
-  /* ===== Footer ===== */
-  .footer {
-    position: relative;
-    z-index: 2;
-    padding: 40px 24px;
-    text-align: center;
-    border-top: 1px solid var(--border);
-    background: rgba(6,8,15,0.8);
-    backdrop-filter: blur(12px);
-  }
-  .footer-inner {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  .footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 20px;
-    justify-content: center;
-    margin-bottom: 16px;
-    font-size: 13px;
-  }
-  .footer-links a {
-    color: var(--text-muted);
-    transition: color 0.3s;
-  }
-  .footer-links a:hover { color: var(--accent2); }
-  .footer-copy {
-    font-size: 12px;
-    color: var(--text-dim);
-  }
+/* ===== PORTAL (Blog + Resume) ===== */
+.portal{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--border);
+  border-radius:var(--radius);overflow:hidden;
+}
+.portal-item{
+  position:relative;padding:48px;
+  background:var(--bg-2);
+  text-decoration:none;color:inherit;
+  transition:background .3s ease;
+  display:flex;flex-direction:column;min-height:320px;
+}
+.portal-item:hover{background:var(--surface)}
+.portal-item::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--accent);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .4s ease;
+}
+.portal-item:hover::before{transform:scaleX(1)}
+.portal-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:var(--accent-soft);display:flex;
+  align-items:center;justify-content:center;
+  margin-bottom:24px;
+}
+.portal-icon svg{width:24px;height:24px;color:var(--accent)}
+.portal-item h3{font-size:24px;font-weight:700;margin-bottom:12px}
+.portal-item p{color:var(--text-dim);font-size:15px;margin-bottom:auto}
+.portal-arrow{
+  margin-top:24px;display:inline-flex;align-items:center;gap:8px;
+  font-size:14px;color:var(--accent);font-weight:500;
+  transition:gap .25s ease;
+}
+.portal-item:hover .portal-arrow{gap:14px}
+.portal-arrow svg{width:16px;height:16px}
 
-  /* ===== Scroll Reveal ===== */
-  .reveal {
-    opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.8s, transform 0.8s;
-  }
-  .reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.portal-item.coming-soon{opacity:.6}
+.portal-item.coming-soon .portal-arrow{color:var(--text-mute)}
+.coming-soon-badge{
+  display:inline-block;padding:4px 10px;border-radius:6px;
+  background:rgba(255,255,255,.05);font-size:11px;
+  color:var(--text-mute);font-weight:500;
+  margin-bottom:16px;letter-spacing:1px;
+}
 
-  /* ===== Responsive ===== */
-  @media (max-width: 768px) {
-    .section { padding: 60px 20px; }
-    .about-grid { grid-template-columns: 1fr; gap: 32px; }
-    .stats-row { grid-template-columns: 1fr; }
-    .nav-cards { grid-template-columns: 1fr; }
-    .contact-row { flex-direction: column; }
-  }
+/* ===== ABOUT ===== */
+.about{max-width:800px}
+.about p{font-size:17px;color:var(--text-dim);margin-bottom:20px;font-weight:300}
+.about .highlight{color:var(--text);font-weight:500}
+
+.stats{
+  display:flex;gap:48px;margin-top:40px;
+  padding-top:40px;border-top:1px solid var(--border);
+}
+.stat{text-align:left}
+.stat-num{
+  font-size:36px;font-weight:700;color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+}
+.stat-num .accent{color:var(--accent)}
+.stat-label{font-size:13px;color:var(--text-mute);margin-top:4px}
+
+/* ===== FOOTER ===== */
+footer{
+  padding:48px;text-align:center;
+  border-top:1px solid var(--border);
+  background:var(--bg-2);
+}
+footer p{font-size:13px;color:var(--text-mute);margin:4px 0}
+footer a{color:var(--text-dim);text-decoration:none;transition:color .2s}
+footer a:hover{color:var(--accent)}
+.footer-links{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:8px}
+
+/* ===== SCROLL REVEAL ===== */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s ease,transform .8s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  nav{padding:16px 20px}
+  nav.scrolled{padding:12px 20px}
+  .nav-links{gap:20px}
+  .nav-links a:not(.logo-link){display:none}
+  .hero{padding:0 20px}
+  .hero h1{font-size:48px;letter-spacing:-2px}
+  .hero p{font-size:16px}
+  .hero-cta{flex-direction:column}
+  section{padding:60px 20px}
+  .portal{grid-template-columns:1fr}
+  .portal-item{padding:32px;min-height:auto}
+  .stats{flex-direction:column;gap:24px}
+  footer{padding:32px 20px}
+}
 </style>
 </head>
 <body>
 
-<!-- ===== Hero ===== -->
-<section class="hero">
-  <div class="hero-bg">
-    <img src="bg.jpg" alt="背景" onerror="this.style.display='none'">
+<nav id="nav">
+  <div class="logo">沐<span>晴</span></div>
+  <div class="nav-links">
+    <a href="#about">关于</a>
+    <a href="#portal">博客</a>
+    <a href="#portal">简历</a>
+    <a href="https://github.com/m29d" target="_blank" rel="noopener">GitHub</a>
   </div>
-  <div class="hero-overlay"></div>
-  <div class="hero-stars" id="stars"></div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-glow"></div>
   <div class="hero-content">
-    <div class="hero-tag">PERSONAL PORTAL</div>
-    <h1 class="hero-name">沐晴</h1>
-    <p class="hero-bio">苦命计算机学生一枚<span style="color:var(--accent3)">^_^</span><span class="cursor"></span></p>
+    <div class="hero-tag"><span class="dot"></span> 全栈开发者 · 成都</div>
+    <h1>你好，我是<br><span class="accent">沐晴</span></h1>
+    <p>热爱技术，享受创造。这里记录我的代码旅程、思考碎片与成长轨迹。</p>
     <div class="hero-cta">
       <a href="https://blog.hhblog.tech" class="btn btn-primary">
         进入博客
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
       </a>
-      <a href="/resume" class="btn btn-ghost">
-        查看简历
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
-      </a>
+      <a href="#portal" class="btn btn-ghost">查看更多</a>
     </div>
   </div>
-  <div class="scroll-indicator">
-    <span>SCROLL</span>
-    <div class="scroll-line"></div>
-  </div>
-</section>
+</div>
 
-<!-- ===== Navigation Cards ===== -->
-<section class="section" id="explore">
-  <div class="section-inner">
-    <div class="section-label reveal">// EXPLORE</div>
-    <h2 class="section-title reveal">探索我的世界</h2>
-    <div class="nav-cards">
-      <a href="https://blog.hhblog.tech" class="nav-card nav-card-blog reveal" style="--card-glow: var(--accent);">
-        <div class="nav-card-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        </div>
-        <h3>博客</h3>
-        <p>技术笔记、项目记录、学习心得<br>Next.js 驱动，持续更新中</p>
-        <span class="nav-card-link">
-          访问 blog.hhblog.tech
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
-        </span>
-      </a>
-      <a href="/resume" class="nav-card nav-card-resume reveal" style="--card-glow: var(--accent2);">
-        <div class="nav-card-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
-        </div>
-        <h3>简历</h3>
-        <p>个人经历、技能栈、项目展示<br>竞赛季、实习经历一览</p>
-        <span class="nav-card-link">
-          查看简历
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </span>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== About ===== -->
-<section class="section" id="about">
-  <div class="section-inner">
-    <div class="section-label reveal">// ABOUT</div>
-    <h2 class="section-title reveal">关于我</h2>
-    <div class="about-grid">
-      <div class="about-text reveal">
-        <p>你好，我是<span class="highlight">沐晴</span>，成都信息工程大学的计算机学生。</p>
-        <p>热爱全栈开发与技术探索，从 <span class="highlight">Next.js</span> 前端到 Python 后端，从 GROMACS 分子动力学模拟到图神经网络炼丹，始终在折腾的路上。</p>
-        <p>课余时间维护个人技术博客，记录代码、学术与生活碎片。偶尔打打游戏，偶尔背背单词，偶尔修修 BUG。</p>
-        <div class="tech-stack">
-          <span class="tech-badge">Next.js 15</span>
-          <span class="tech-badge">React 19</span>
-          <span class="tech-badge">TypeScript</span>
-          <span class="tech-badge">Tailwind CSS</span>
-          <span class="tech-badge">Python</span>
-          <span class="tech-badge">Node.js</span>
-          <span class="tech-badge">GROMACS</span>
-          <span class="tech-badge">PyTorch</span>
-        </div>
+<!-- ABOUT -->
+<section id="about" class="reveal">
+  <div class="section-label">// ABOUT</div>
+  <h2 class="section-title">关于我</h2>
+  <div class="about">
+    <p>
+      <span class="highlight">沐晴</span>，成都信息工程大学在读，一名热衷全栈开发的独立开发者。
+      专注于 <span class="highlight">Node.js / React / Next.js</span> 技术栈，
+      喜欢从零搭建项目，从前端到后端、从部署到运维，享受将想法变成现实的完整过程。
+    </p>
+    <p>
+      业余时间写技术博客、折腾服务器运维、参与开源社区。
+      相信好的代码不仅是能运行，更是清晰、优雅且可维护的。
+    </p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num"><span class="accent">3</span>+</div>
+        <div class="stat-label">年开发经验</div>
       </div>
-      <div class="reveal">
-        <div class="stats-row" style="grid-template-columns: 1fr;">
-          <div class="stat-card">
-            <div class="stat-num" id="days">—</div>
-            <div class="stat-label">建站天数</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" style="background: linear-gradient(135deg, var(--accent3), var(--accent4)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">7+12</div>
-            <div class="stat-label">国家级 + 省级奖项</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-num" style="background: linear-gradient(135deg, var(--accent4), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">28+8</div>
-            <div class="stat-label">专利 + 软著</div>
-          </div>
-        </div>
+      <div class="stat">
+        <div class="stat-num"><span class="accent">20</span>+</div>
+        <div class="stat-label">项目实践</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num"><span class="accent">∞</span></div>
+        <div class="stat-label">求知欲</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== More Sections (Placeholder) ===== -->
-<section class="section" id="more">
-  <div class="section-inner">
-    <div class="section-label reveal">// COMING SOON</div>
-    <h2 class="section-title reveal">更多板块</h2>
-    <div class="placeholder-grid">
-      <div class="placeholder-card reveal">
-        <div class="placeholder-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-        </div>
-        <h4>时间线</h4>
-        <p>学习历程与成长轨迹</p>
+<!-- PORTAL: Blog + Resume -->
+<section id="portal" class="reveal">
+  <div class="section-label">// PORTAL</div>
+  <h2 class="section-title">入口</h2>
+  <div class="portal">
+    <!-- Blog -->
+    <a href="https://blog.hhblog.tech" class="portal-item">
+      <div class="portal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
       </div>
-      <div class="placeholder-card reveal">
-        <div class="placeholder-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        </div>
-        <h4>项目集</h4>
-        <p>个人项目与作品展示</p>
+      <h3>博客</h3>
+      <p>技术笔记、项目复盘、开发心得。记录每一次踩坑与成长，分享可复用的实践经验。</p>
+      <div class="portal-arrow">
+        前往博客
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
       </div>
-      <div class="placeholder-card reveal">
-        <div class="placeholder-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </div>
-        <h4>留言板</h4>
-        <p>欢迎留下你的想法</p>
+    </a>
+    <!-- Resume -->
+    <div class="portal-item coming-soon">
+      <div class="coming-soon-badge">COMING SOON</div>
+      <div class="portal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+        </svg>
       </div>
-      <div class="placeholder-card reveal">
-        <div class="placeholder-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        </div>
-        <h4>工具箱</h4>
-        <p>开发常用工具集合</p>
+      <h3>简历</h3>
+      <p>教育背景、技术栈、项目经历与获奖荣誉。完整版个人简历正在整理中，敬请期待。</p>
+      <div class="portal-arrow">
+        敬请期待
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== Contact ===== -->
-<section class="section" id="contact">
-  <div class="section-inner">
-    <div class="section-label reveal">// CONTACT</div>
-    <h2 class="section-title reveal">联系我</h2>
-    <div class="contact-row">
-      <a href="https://github.com/heiehiehi" target="_blank" rel="noopener" class="contact-link reveal">
-        <div class="contact-icon" style="background: rgba(168,85,247,0.15); color: var(--accent);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        </div>
-        <div class="contact-info">
-          <div class="label">GitHub</div>
-          <div class="value">@heiehiehi</div>
-        </div>
-      </a>
-      <a href="mailto:1664300699@qq.com" class="contact-link reveal">
-        <div class="contact-icon" style="background: rgba(59,130,246,0.15); color: var(--accent4);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
-        </div>
-        <div class="contact-info">
-          <div class="label">Email</div>
-          <div class="value">1664300699@qq.com</div>
-        </div>
-      </a>
-      <a href="https://blog.hhblog.tech" target="_blank" rel="noopener" class="contact-link reveal">
-        <div class="contact-icon" style="background: rgba(6,182,212,0.15); color: var(--accent2);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        </div>
-        <div class="contact-info">
-          <div class="label">博客</div>
-          <div class="value">blog.hhblog.tech</div>
-        </div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Footer ===== -->
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-links">
-      <a href="https://blog.hhblog.tech" target="_blank" rel="noopener">博客</a>
-      <a href="/resume">简历</a>
-      <a href="https://github.com/heiehiehi" target="_blank" rel="noopener">GitHub</a>
-      <a href="mailto:1664300699@qq.com">Email</a>
-    </div>
-    <div class="footer-copy">
-      <p>&copy; 2026 沐晴の编程blog</p>
-      <p style="margin-top: 8px;">
-        <a href="https://icp.gov.moe/?keyword=20260240" target="_blank" rel="noopener" style="color: var(--text-dim);">萌ICP备 20260240号</a>
-        <span style="margin: 0 8px; opacity: 0.3;">|</span>
-        <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=51012202002558" target="_blank" rel="noopener" style="color: var(--text-dim);">川公网安备 51012202002558号</a>
-      </p>
-    </div>
+<!-- FOOTER -->
+<footer>
+  <p>&copy; 2026 沐晴の编程Blog</p>
+  <div class="footer-links">
+    <a href="https://icp.gov.moe/?keyword=20260240" target="_blank" rel="noopener">萌ICP备 20260240号</a>
+    <span style="color:var(--text-mute)">|</span>
+    <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=51012202002558" target="_blank" rel="noopener">川公网安备 51012202002558号</a>
   </div>
 </footer>
 
 <script>
-  // Generate stars
-  (function() {
-    var container = document.getElementById('stars');
-    for (var i = 0; i < 60; i++) {
-      var s = document.createElement('div');
-      s.className = 'star';
-      s.style.left = Math.random() * 100 + '%';
-      s.style.top = Math.random() * 100 + '%';
-      s.style.setProperty('--dur', (2 + Math.random() * 3) + 's');
-      s.style.setProperty('--delay', Math.random() * 3 + 's');
-      s.style.opacity = 0.3 + Math.random() * 0.7;
-      container.appendChild(s);
+// Nav scroll effect
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 20) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
     }
-  })();
-
-  // Scroll reveal
-  (function() {
-    var observer = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.15 });
-    document.querySelectorAll('.reveal').forEach(function(el) {
-      observer.observe(el);
-    });
-  })();
-
-  // Days since build
-  (function() {
-    var buildDate = new Date('2026-03-23T00:00:00');
-    var now = new Date();
-    var days = Math.floor((now - buildDate) / (1000 * 60 * 60 * 24));
-    var el = document.getElementById('days');
-    if (el) el.textContent = days + ' 天';
-  })();
-
-  // Card tilt effect
-  document.querySelectorAll('.nav-card').forEach(function(card) {
-    card.addEventListener('mousemove', function(e) {
-      var rect = card.getBoundingClientRect();
-      var x = e.clientX - rect.left;
-      var y = e.clientY - rect.top;
-      var cx = rect.width / 2;
-      var cy = rect.height / 2;
-      var rx = (y - cy) / cy * -5;
-      var ry = (x - cx) / cx * 5;
-      card.style.transform = 'perspective(800px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateY(-4px)';
-    });
-    card.addEventListener('mouseleave', function() {
-      card.style.transform = '';
-    });
   });
-</script>
+}, { threshold: 0.15 });
 
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
 </body>
 </html>
