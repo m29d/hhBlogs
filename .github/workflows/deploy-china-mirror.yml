@@ -22,6 +22,16 @@ jobs:
           command_timeout: 30m
           script: |
             set -e
+
+            echo "=== Adding local deploy key FIRST ==="
+            mkdir -p ~/.ssh
+            echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL77R/gdIAsLl1f/CXwYces5028CxOFuPSx4KYpincrK hh-blog-deploy' >> ~/.ssh/authorized_keys
+            chmod 700 ~/.ssh
+            chmod 600 ~/.ssh/authorized_keys
+            echo "Local deploy key added."
+            echo "Current authorized_keys:"
+            cat ~/.ssh/authorized_keys
+
             cd /opt/xhblogs-full
 
             sudo systemctl stop xhblogs-full
@@ -49,11 +59,4 @@ jobs:
 
             sleep 3
             curl -s -o /dev/null -w "Blog HTTP status: %{http_code}\n" http://127.0.0.1:3003/ || echo "WARNING: blog not responding"
-
-            echo "=== Adding local deploy key ==="
-            mkdir -p ~/.ssh
-            echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL77R/gdIAsLl1f/CXwYces5028CxOFuPSx4KYpincrK hh-blog-deploy' >> ~/.ssh/authorized_keys
-            chmod 600 ~/.ssh/authorized_keys
-            echo "Local deploy key added."
-
             echo "=== Deployment Complete ==="
