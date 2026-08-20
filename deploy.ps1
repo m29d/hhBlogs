@@ -8,7 +8,7 @@ param(
 
 $SERVER = "bt"
 $REPO_DIR = "/opt/xhblogs-full"
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 function Write-Step($msg) { Write-Host "`n[$((Get-Date).ToString('HH:mm:ss'))] $msg" -ForegroundColor Cyan }
 function Write-OK($msg)   { Write-Host "  OK $msg" -ForegroundColor Green }
