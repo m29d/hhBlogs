@@ -10,68 +10,94 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Fix SSH config and add deploy key
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 5m
+          script: |
+            echo "=== Fixing SSH Configuration ==="
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null
+            # Ensure .ssh directory exists with correct permissions
+            mkdir -p ~/.ssh
+            chmod 700 ~/.ssh
+            chown -R root:root ~/.ssh
 
-      - name: Add local deploy key and capture output
-        id: ssh
-        run: |
-          {
-            ssh -o ConnectTimeout=10 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'SSHEOF'
-              echo "=== SSH Debug Info ==="
-              echo "User: $(whoami)"
-              echo "Home: $HOME"
-              echo ""
-              echo "=== Checking .ssh directory ==="
-              ls -la ~/.ssh/ 2>/dev/null || echo "No .ssh dir"
-              echo ""
-              echo "=== Checking authorized_keys ==="
-              cat ~/.ssh/authorized_keys 2>/dev/null || echo "No authorized_keys"
-              echo ""
-              echo "=== Adding local deploy key ==="
-              mkdir -p ~/.ssh
-              chmod 700 ~/.ssh
-              touch ~/.ssh/authorized_keys
-              chmod 600 ~/.ssh/authorized_keys
-              PUB_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL77R/gdIAsLl1f/CXwYces5028CxOFuPSx4KYpincrK hh-blog-deploy"
-              if grep -q "hh-blog-deploy" ~/.ssh/authorized_keys 2>/dev/null; then
-                echo "Key already exists"
-              else
-                echo "$PUB_KEY" >> ~/.ssh/authorized_keys
-                echo "Key added successfully"
-              fi
-              echo ""
-              echo "=== Verifying ==="
-              echo "authorized_keys content:"
-              cat ~/.ssh/authorized_keys
-              echo ""
-              echo "Permissions:"
-              ls -la ~/.ssh/
-              echo ""
-              echo "=== SSHD config ==="
-              grep -i "PubkeyAuthentication\|PermitRootLogin\|AuthorizedKeysFile\|PasswordAuthentication" /etc/ssh/sshd_config 2>/dev/null | grep -v "^#"
-              echo ""
-              echo "=== Home dir permissions ==="
-              ls -ld ~
-              echo ""
-              echo "=== DONE ==="
-SSHEOF
-          } > ssh-debug-output.txt 2>&1
+            # Create or ensure authorized_keys exists
+            touch ~/.ssh/authorized_keys
+            chmod 600 ~/.ssh/authorized_keys
+            chown root:root ~/.ssh/authorized_keys
 
-          echo "=== SSH Debug Output ==="
-          cat ssh-debug-output.txt
+            # Add local deploy public key
+            PUB_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL77R/gdIAsLl1f/CXwYces5028CxOFuPSx4KYpincrK hh-blog-deploy"
+            if grep -q "hh-blog-deploy" ~/.ssh/authorized_keys 2>/dev/null; then
+              echo "Deploy key already in authorized_keys"
+            else
+              echo "$PUB_KEY" >> ~/.ssh/authorized_keys
+              echo "Deploy key added to authorized_keys"
+            fi
 
-      - name: Commit debug output
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ssh-debug-output.txt
-          git commit -m "chore: add SSH debug output" || echo "Nothing to commit"
-          git push
+            # Fix home directory permissions (SSH requires 755 or stricter)
+            chmod 755 ~
+            echo "Home directory permissions fixed: $(ls -ld ~)"
+
+            # Check and fix sshd_config
+            SSHD_CONFIG="/etc/ssh/sshd_config"
+
+            # Ensure PubkeyAuthentication is enabled
+            if grep -q "^PubkeyAuthentication" "$SSHD_CONFIG"; then
+              sed -i 's/^PubkeyAuthentication.*/PubkeyAuthentication yes/' "$SSHD_CONFIG"
+            else
+              echo "PubkeyAuthentication yes" >> "$SSHD_CONFIG"
+            fi
+
+            # Ensure PermitRootLogin allows key-based auth
+            if grep -q "^PermitRootLogin" "$SSHD_CONFIG"; then
+              sed -i 's/^PermitRootLogin.*/PermitRootLogin prohibit-password/' "$SSHD_CONFIG"
+            else
+              echo "PermitRootLogin prohibit-password" >> "$SSHD_CONFIG"
+            fi
+
+            # Ensure AuthorizedKeysFile points to correct path
+            if grep -q "^AuthorizedKeysFile" "$SSHD_CONFIG"; then
+              sed -i 's|^AuthorizedKeysFile.*|AuthorizedKeysFile .ssh/authorized_keys|' "$SSHD_CONFIG"
+            else
+              echo "AuthorizedKeysFile .ssh/authorized_keys" >> "$SSHD_CONFIG"
+            fi
+
+            # Ensure PasswordAuthentication is on (for fallback)
+            if grep -q "^PasswordAuthentication" "$SSHD_CONFIG"; then
+              sed -i 's/^PasswordAuthentication.*/PasswordAuthentication yes/' "$SSHD_CONFIG"
+            else
+              echo "PasswordAuthentication yes" >> "$SSHD_CONFIG"
+            fi
+
+            echo "SSHD config updated"
+
+            # Test sshd config
+            if sshd -t 2>&1; then
+              echo "SSHD config test passed"
+            else
+              echo "SSHD config test FAILED - checking for issues..."
+              sshd -t 2>&1
+            fi
+
+            # Restart SSHD
+            systemctl reload sshd 2>/dev/null || systemctl reload ssh 2>/dev/null || systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null
+            echo "SSHD restarted"
+
+            # Final verification
+            echo ""
+            echo "=== Final State ==="
+            echo "Home dir: $(ls -ld ~)"
+            echo ".ssh dir: $(ls -ld ~/.ssh)"
+            echo "authorized_keys: $(ls -la ~/.ssh/authorized_keys)"
+            echo "authorized_keys content:"
+            cat ~/.ssh/authorized_keys
+            echo ""
+            echo "SSHD relevant config:"
+            grep -E "^PubkeyAuthentication|^PermitRootLogin|^AuthorizedKeysFile|^PasswordAuthentication" "$SSHD_CONFIG"
+            echo ""
+            echo "=== SSH Fix Complete ==="
