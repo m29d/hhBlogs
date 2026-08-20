@@ -10,14 +10,16 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null
+
       - name: Add local deploy key and debug SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 5m
-          script: |
+        run: |
+          ssh -o ConnectTimeout=10 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'SSHEOF'
             echo "=== SSH Debug Info ==="
             echo "User: $(whoami)"
             echo "Home: $HOME"
@@ -39,20 +41,24 @@ jobs:
               echo "Key already exists"
             else
               echo "$PUB_KEY" >> ~/.ssh/authorized_keys
-              echo "Key added"
+              echo "Key added successfully"
             fi
 
             echo "=== Verifying ==="
+            echo "authorized_keys content:"
             cat ~/.ssh/authorized_keys
+            echo ""
+            echo "Permissions:"
             ls -la ~/.ssh/
 
             echo "=== SSHD config check ==="
             grep -i "PubkeyAuthentication\|PermitRootLogin\|AuthorizedKeysFile" /etc/ssh/sshd_config 2>/dev/null | grep -v "^#"
 
-            echo "=== Testing SSH config ==="
-            sudo sshd -t 2>&1 && echo "SSHD config OK" || echo "SSHD config ERROR"
-
-            echo "=== Reloading SSHD ==="
-            sudo systemctl reload sshd 2>/dev/null || sudo systemctl reload ssh 2>/dev/null || echo "Could not reload sshd"
-
             echo "=== DONE ==="
+SSHEOF
+
+      - name: Test local SSH key
+        run: |
+          echo "Testing if local key would work..."
+          echo "Local public key fingerprint:"
+          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL77R/gdIAsLl1f/CXwYces5028CxOFuPSx4KYpincrK hh-blog-deploy" | ssh-keygen -lf -
