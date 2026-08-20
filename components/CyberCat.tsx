@@ -11,6 +11,7 @@ export default function CyberCat() {
   const [isThinking, setIsThinking] = useState(false);
 
   const chatTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const constraintsRef = useRef<HTMLDivElement>(null);
 
   // --- 💬 说话功能 ---
   const speak = (text: string, duration = 6000) => {
@@ -108,11 +109,18 @@ export default function CyberCat() {
 
 
   return (
+    <>
+    <div
+      ref={constraintsRef}
+      className="fixed inset-0 pointer-events-none z-[9998]"
+    />
     <motion.div
       drag
+      dragConstraints={constraintsRef}
+      dragElastic={0}
       dragMomentum={false}
       whileDrag={{ scale: 1.1, cursor: "grabbing" }}
-      className="fixed bottom-20 right-20 z-[9999] flex flex-col items-center group cursor-grab active:cursor-grabbing touch-none"
+      className="fixed bottom-20 right-20 z-[9999] flex flex-col items-center group cursor-grab active:cursor-grabbing touch-none pointer-events-auto"
     >
       {/* 💬 聊天气泡 */}
       <div className="relative w-full flex justify-center mb-6">
@@ -238,5 +246,6 @@ export default function CyberCat() {
         )}
       </AnimatePresence>
     </motion.div>
+    </>
   );
 }
