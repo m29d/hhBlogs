@@ -10,6 +10,9 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -17,48 +20,58 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Add local deploy key and debug SSH
+      - name: Add local deploy key and capture output
+        id: ssh
         run: |
-          ssh -o ConnectTimeout=10 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'SSHEOF'
-            echo "=== SSH Debug Info ==="
-            echo "User: $(whoami)"
-            echo "Home: $HOME"
-
-            echo "=== Checking .ssh directory ==="
-            ls -la ~/.ssh/ 2>/dev/null || echo "No .ssh dir"
-
-            echo "=== Checking authorized_keys ==="
-            cat ~/.ssh/authorized_keys 2>/dev/null || echo "No authorized_keys"
-
-            echo "=== Adding local deploy key ==="
-            mkdir -p ~/.ssh
-            chmod 700 ~/.ssh
-            touch ~/.ssh/authorized_keys
-            chmod 600 ~/.ssh/authorized_keys
-
-            PUB_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL77R/gdIAsLl1f/CXwYces5028CxOFuPSx4KYpincrK hh-blog-deploy"
-            if grep -q "hh-blog-deploy" ~/.ssh/authorized_keys 2>/dev/null; then
-              echo "Key already exists"
-            else
-              echo "$PUB_KEY" >> ~/.ssh/authorized_keys
-              echo "Key added successfully"
-            fi
-
-            echo "=== Verifying ==="
-            echo "authorized_keys content:"
-            cat ~/.ssh/authorized_keys
-            echo ""
-            echo "Permissions:"
-            ls -la ~/.ssh/
-
-            echo "=== SSHD config check ==="
-            grep -i "PubkeyAuthentication\|PermitRootLogin\|AuthorizedKeysFile" /etc/ssh/sshd_config 2>/dev/null | grep -v "^#"
-
-            echo "=== DONE ==="
+          {
+            ssh -o ConnectTimeout=10 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'SSHEOF'
+              echo "=== SSH Debug Info ==="
+              echo "User: $(whoami)"
+              echo "Home: $HOME"
+              echo ""
+              echo "=== Checking .ssh directory ==="
+              ls -la ~/.ssh/ 2>/dev/null || echo "No .ssh dir"
+              echo ""
+              echo "=== Checking authorized_keys ==="
+              cat ~/.ssh/authorized_keys 2>/dev/null || echo "No authorized_keys"
+              echo ""
+              echo "=== Adding local deploy key ==="
+              mkdir -p ~/.ssh
+              chmod 700 ~/.ssh
+              touch ~/.ssh/authorized_keys
+              chmod 600 ~/.ssh/authorized_keys
+              PUB_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL77R/gdIAsLl1f/CXwYces5028CxOFuPSx4KYpincrK hh-blog-deploy"
+              if grep -q "hh-blog-deploy" ~/.ssh/authorized_keys 2>/dev/null; then
+                echo "Key already exists"
+              else
+                echo "$PUB_KEY" >> ~/.ssh/authorized_keys
+                echo "Key added successfully"
+              fi
+              echo ""
+              echo "=== Verifying ==="
+              echo "authorized_keys content:"
+              cat ~/.ssh/authorized_keys
+              echo ""
+              echo "Permissions:"
+              ls -la ~/.ssh/
+              echo ""
+              echo "=== SSHD config ==="
+              grep -i "PubkeyAuthentication\|PermitRootLogin\|AuthorizedKeysFile\|PasswordAuthentication" /etc/ssh/sshd_config 2>/dev/null | grep -v "^#"
+              echo ""
+              echo "=== Home dir permissions ==="
+              ls -ld ~
+              echo ""
+              echo "=== DONE ==="
 SSHEOF
+          } > ssh-debug-output.txt 2>&1
 
-      - name: Test local SSH key
+          echo "=== SSH Debug Output ==="
+          cat ssh-debug-output.txt
+
+      - name: Commit debug output
         run: |
-          echo "Testing if local key would work..."
-          echo "Local public key fingerprint:"
-          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL77R/gdIAsLl1f/CXwYces5028CxOFuPSx4KYpincrK hh-blog-deploy" | ssh-keygen -lf -
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ssh-debug-output.txt
+          git commit -m "chore: add SSH debug output" || echo "Nothing to commit"
+          git push
