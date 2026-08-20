@@ -1,9 +1,7 @@
 ﻿name: Deploy to China Mirror
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 concurrency:
   group: deploy-to-server
