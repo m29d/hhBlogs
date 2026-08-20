@@ -11,12 +11,12 @@ $REPO_DIR = "/opt/xhblogs-full"
 $ErrorActionPreference = "Stop"
 
 function Write-Step($msg) { Write-Host "`n[$((Get-Date).ToString('HH:mm:ss'))] $msg" -ForegroundColor Cyan }
-function Write-OK($msg)   { Write-Host "  ✓ $msg" -ForegroundColor Green }
-function Write-Err($msg)  { Write-Host "  ✗ $msg" -ForegroundColor Red }
+function Write-OK($msg)   { Write-Host "  OK $msg" -ForegroundColor Green }
+function Write-Err($msg)  { Write-Host "  ERR $msg" -ForegroundColor Red }
 function Write-Info($msg) { Write-Host "  $msg" -ForegroundColor Gray }
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  沐晴の编程blog - 本地部署" -ForegroundColor Cyan
+Write-Host "  本地部署到服务器" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 
 # Step 1: Push to GitHub
@@ -34,7 +34,7 @@ if (-not $SkipPush) {
 
 # Step 2: Server pulls latest code
 Write-Step "Step 2/4: 服务器拉取最新代码"
-ssh $SERVER "cd $REPO_DIR && git fetch origin main && git reset --hard origin/main && echo 'HEAD:' && git log --oneline -1" 2>&1 | ForEach-Object { Write-Info $_ }
+ssh $SERVER "cd $REPO_DIR ; git fetch origin main ; git reset --hard origin/main ; echo 'HEAD:' ; git log --oneline -1" 2>&1 | ForEach-Object { Write-Info $_ }
 if ($LASTEXITCODE -ne 0) {
     Write-Err "拉取代码失败"
     exit 1
@@ -44,7 +44,7 @@ Write-OK "服务器代码已更新"
 # Step 3: Install dependencies and build
 Write-Step "Step 3/4: 安装依赖并构建"
 Write-Info "这可能需要几分钟，请耐心等待..."
-$buildResult = ssh $SERVER "cd $REPO_DIR && npm install 2>&1 && NODE_OPTIONS='--max-old-space-size=2048' npm run build 2>&1 && cp -r .next/static .next/standalone/.next/ 2>&1 && echo 'BUILD_SUCCESS'" 2>&1
+$buildResult = ssh $SERVER "cd $REPO_DIR ; npm install 2>&1 ; NODE_OPTIONS='--max-old-space-size=2048' npm run build 2>&1 ; cp -r .next/static .next/standalone/.next/ 2>&1 ; echo 'BUILD_SUCCESS'" 2>&1
 $buildResult | Select-Object -Last 5 | ForEach-Object { Write-Info $_ }
 if ($buildResult -match "BUILD_SUCCESS") {
     Write-OK "构建完成"
@@ -57,7 +57,7 @@ if ($buildResult -match "BUILD_SUCCESS") {
 
 # Step 4: Restart services
 Write-Step "Step 4/4: 重启服务"
-$restartResult = ssh $SERVER "sudo systemctl restart xhblogs-full && sleep 3 && curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3003/" 2>&1
+$restartResult = ssh $SERVER "sudo systemctl restart xhblogs-full ; sleep 3 ; curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3003/" 2>&1
 Write-Info "HTTP状态: $restartResult"
 if ($restartResult -match "200") {
     Write-OK "服务已重启，博客正常运行"
@@ -76,7 +76,9 @@ try {
     Write-Err "网站访问失败: $_"
 }
 
-Write-Host "`n========================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  部署完成!" -ForegroundColor Green
 Write-Host "  访问: https://hhblog.tech" -ForegroundColor Cyan
-Write-Host "========================================`n" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
