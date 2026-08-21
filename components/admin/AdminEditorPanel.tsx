@@ -3,8 +3,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FileText, MessageSquare, Tag, Layers, Plus, Trash2, Edit3,
-  Eye, Focus, Save, Loader2, ArrowLeft, Clock, Type, Hash,
+  FileText, MessageSquare, Tag, Layers, Plus,
+  Eye, Focus, Save, Loader2, ArrowLeft, Type, Hash,
   CheckCircle2, AlertCircle, Keyboard
 } from 'lucide-react';
 import RichTextEditor, { RichTextEditorHandle } from '../editor/RichTextEditor';
@@ -31,9 +31,7 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export default function AdminEditorPanel() {
   const [view, setView] = useState<'list' | 'editor'>('list');
-  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [stats, setStats] = useState<Stats>({ posts: 0, chatters: 0, tags: 0, total: 0 });
-  const [loading, setLoading] = useState(true);
 
   // Editor state
   const [editId, setEditId] = useState<string>('new');
@@ -53,31 +51,26 @@ export default function AdminEditorPanel() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [wordCount, setWordCount] = useState({ words: 0, chars: 0 });
   const [tagInput, setTagInput] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const editorRef = useRef<RichTextEditorHandle>(null);
   const saveStatusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load drafts list
-  const loadDrafts = useCallback(async () => {
-    setLoading(true);
+  // Load stats
+  const loadStats = useCallback(async () => {
     try {
       const res = await fetch('/api/drafts/list');
       const data = await res.json();
       if (data.success) {
-        setDrafts(data.drafts);
         setStats(data.stats);
       }
     } catch (e) {
-      console.error('Failed to load drafts', e);
-    } finally {
-      setLoading(false);
+      console.error('Failed to load stats', e);
     }
   }, []);
 
   useEffect(() => {
-    loadDrafts();
-  }, [loadDrafts]);
+    loadStats();
+  }, [loadStats]);
 
   // Load draft for editing
   const loadDraft = useCallback(async (id: string, type: 'post' | 'chatter') => {
@@ -181,24 +174,6 @@ export default function AdminEditorPanel() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [view, handleSave]);
 
-  // Delete draft
-  const handleDelete = useCallback(async (id: string, type: 'post' | 'chatter') => {
-    try {
-      const res = await fetch('/api/drafts/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, type }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setDeleteConfirm(null);
-        loadDrafts();
-      }
-    } catch (e) {
-      console.error('Failed to delete', e);
-    }
-  }, [loadDrafts]);
-
   // Add tag
   const addTag = () => {
     const t = tagInput.trim();
@@ -247,123 +222,6 @@ export default function AdminEditorPanel() {
           <Plus size={18} /> 新建杂谈
         </button>
       </div>
-
-      {/* Drafts List */}
-      {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-        </div>
-      ) : drafts.length === 0 ? (
-        <div className="text-center py-16 text-slate-400">
-          <FileText size={48} className="mx-auto mb-3 opacity-40" />
-          <p className="font-bold">还没有任何内容，点击上方按钮开始创作</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {drafts.map((draft) => (
-            <div
-              key={`${draft.type}-${draft.id}`}
-              className="flex items-center gap-4 p-4 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-white/50 dark:border-slate-700/50 hover:border-indigo-500/40 transition-all group"
-            >
-              {/* Cover or type icon */}
-              {draft.cover ? (
-                <img src={draft.cover} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0" />
-              ) : (
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${draft.type === 'chatter' ? 'bg-purple-500/20' : 'bg-blue-500/20'}`}>
-                  {draft.type === 'chatter' ? <MessageSquare size={20} className="text-purple-500" /> : <FileText size={20} className="text-blue-500" />}
-                </div>
-              )}
-
-              {/* Info */}
-              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => loadDraft(draft.id, draft.type)}>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-black text-slate-800 dark:text-white truncate">{draft.title}</h3>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${draft.type === 'chatter' ? 'bg-purple-500/15 text-purple-500' : 'bg-blue-500/15 text-blue-500'}`}>
-                    {draft.type === 'chatter' ? '杂谈' : '文章'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 mt-1">
-                  {draft.date && <span className="text-xs text-slate-400 font-medium flex items-center gap-1"><Clock size={11} />{draft.date}</span>}
-                  {draft.tags.length > 0 && (
-                    <div className="flex gap-1 overflow-hidden">
-                      {draft.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="text-[10px] font-bold text-slate-400 bg-slate-500/10 px-2 py-0.5 rounded-full">{tag}</span>
-                      ))}
-                      {draft.tags.length > 3 && <span className="text-[10px] text-slate-400">+{draft.tags.length - 3}</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => loadDraft(draft.id, draft.type)}
-                  className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-colors"
-                  title="编辑"
-                >
-                  <Edit3 size={16} />
-                </button>
-                <button
-                  onClick={() => setDeleteConfirm(`${draft.type}:${draft.id}:${draft.title}`)}
-                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                  title="删除"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Delete Confirmation */}
-      <AnimatePresence>
-        {deleteConfirm && (() => {
-          const [type, id, title] = deleteConfirm.split(':');
-          return (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
-              onClick={() => setDeleteConfirm(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 max-w-sm w-full mx-4"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-red-500/15 flex items-center justify-center">
-                    <Trash2 className="text-red-500" size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-slate-800 dark:text-white">确认删除</h3>
-                    <p className="text-sm text-slate-400">此操作不可撤销</p>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mb-5">
-                  确定要删除 <span className="font-black">"{title}"</span> 吗？
-                </p>
-                <div className="flex gap-3">
-                  <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-sm font-bold transition-colors">
-                    取消
-                  </button>
-                  <button
-                    onClick={() => handleDelete(id, type as 'post' | 'chatter')}
-                    className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold transition-colors active:scale-95"
-                  >
-                    删除
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          );
-        })()}
-      </AnimatePresence>
     </div>
   );
 
@@ -373,13 +231,13 @@ export default function AdminEditorPanel() {
       {/* Top Bar */}
       <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
         <div className="flex items-center gap-3">
-          <button onClick={() => { setView('list'); loadDrafts(); }} className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-colors">
+          <button onClick={() => { setView('list'); loadStats(); }} className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-colors">
             <ArrowLeft size={18} />
           </button>
           <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${editType === 'chatter' ? 'bg-purple-500/15 text-purple-500' : 'bg-blue-500/15 text-blue-500'}`}>
             {editType === 'chatter' ? '杂谈' : '文章'}
           </span>
-          <span className="text-sm font-bold text-slate-400">{editId === 'new' ? '新建草稿' : editId}</span>
+          <span className="text-sm font-bold text-slate-400">{editId === 'new' ? '新建' : editId}</span>
         </div>
 
         <div className="flex items-center gap-2">
